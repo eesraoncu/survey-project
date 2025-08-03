@@ -14,7 +14,16 @@ public class MongoDBService
         if (mongoSettings == null)
             throw new ArgumentNullException(nameof(mongoSettings), "MongoDB ayarları bulunamadı!");
 
-        var client = new MongoClient(mongoSettings.ConnectionString);
+        var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(30);
+        settings.ConnectTimeout = TimeSpan.FromSeconds(30);
+        settings.SocketTimeout = TimeSpan.FromSeconds(30);
+        settings.SslSettings = new SslSettings
+        {
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
+        };
+
+        var client = new MongoClient(settings);
         var database = client.GetDatabase(mongoSettings.DatabaseName);
         _collection = database.GetCollection<Survey>(mongoSettings.CollectionName);
     }
