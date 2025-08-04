@@ -5,70 +5,53 @@ namespace SurveyApp.Infrastructure.Repositories;
 
 public class SurveyRepository : ISurveyRepository
 {
-    private readonly IMongoCollection<Survey> _collection;
+    private readonly IMongoCollection<Survey> _surveys;
 
-    public SurveyRepository(IConfiguration configuration)
+    public SurveyRepository(IMongoDatabase database)
     {
-        var mongoSettings = configuration.GetSection("MongoDB").Get<MongoDBSettings>();
-        
-        if (mongoSettings == null)
-            throw new ArgumentNullException(nameof(mongoSettings), "MongoDB ayarları bulunamadı!");
-
-        var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
-        var client = new MongoClient(settings);
-        var database = client.GetDatabase(mongoSettings.DatabaseName);
-        _collection = database.GetCollection<Survey>("surveys");
+        _surveys = database.GetCollection<Survey>("surveys");
     }
 
     public async Task<List<Survey>> GetAllAsync()
     {
-        return await _collection.Find(_ => true).ToListAsync();
+        return await _surveys.Find(_ => true).ToListAsync();
     }
 
     public async Task<Survey?> GetByIdAsync(string id)
     {
-        var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
-        return await _collection.Find(filter).FirstOrDefaultAsync();
+        return await _surveys.Find(s => s.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<Survey> CreateAsync(Survey survey)
+    {
+        await _surveys.InsertOneAsync(survey);
+        return survey;
+    }
+
+    public async Task<bool> UpdateAsync(string id, Survey survey)
+    {
+        var result = await _surveys.ReplaceOneAsync(s => s.Id == id, survey);
+        return result.ModifiedCount > 0;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        var result = await _surveys.DeleteOneAsync(s => s.Id == id);
+        return result.DeletedCount > 0;
     }
 
     public async Task<List<Survey>> GetByUserIdAsync(string userId)
     {
-        var filter = Builders<Survey>.Filter.Eq(x => x.UsersId, userId);
-        return await _collection.Find(filter).ToListAsync();
+        return await _surveys.Find(s => s.UsersId == userId).ToListAsync();
     }
 
     public async Task<List<Survey>> GetBySurveyTypeIdAsync(string surveyTypeId)
     {
-        var filter = Builders<Survey>.Filter.Eq(x => x.SurveyTypeId, surveyTypeId);
-        return await _collection.Find(filter).ToListAsync();
+        return await _surveys.Find(s => s.SurveyTypeId == surveyTypeId).ToListAsync();
     }
 
     public async Task<List<Survey>> GetActiveSurveysAsync()
     {
-        var filter = Builders<Survey>.Filter.Eq(x => x.IsActive, true);
-        return await _collection.Find(filter).ToListAsync();
-    }
-
-    public async Task CreateAsync(Survey survey)
-    {
-        await _collection.InsertOneAsync(survey);
-    }
-
-    public async Task UpdateAsync(string id, Survey survey)
-    {
-        var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
-        await _collection.ReplaceOneAsync(filter, survey);
-    }
-
-    public async Task DeleteAsync(string id)
-    {
-        var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
-        await _collection.DeleteOneAsync(filter);
-    }
-
-    public async Task<bool> ExistsAsync(string id)
-    {
-        var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
-        return await _collection.Find(filter).AnyAsync();
+        return await _surveys.Find(s => s.IsActive).ToListAsync();
     }
 } 

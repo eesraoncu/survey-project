@@ -5,76 +5,53 @@ namespace SurveyApp.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly IMongoCollection<User> _collection;
+    private readonly IMongoCollection<User> _users;
 
-    public UserRepository(IConfiguration configuration)
+    public UserRepository(IMongoDatabase database)
     {
-        var mongoSettings = configuration.GetSection("MongoDB").Get<MongoDBSettings>();
-        
-        if (mongoSettings == null)
-            throw new ArgumentNullException(nameof(mongoSettings), "MongoDB ayarları bulunamadı!");
-
-        var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
-        var client = new MongoClient(settings);
-        var database = client.GetDatabase(mongoSettings.DatabaseName);
-        _collection = database.GetCollection<User>("users");
+        _users = database.GetCollection<User>("users");
     }
 
     public async Task<List<User>> GetAllAsync()
     {
-        return await _collection.Find(_ => true).ToListAsync();
+        return await _users.Find(_ => true).ToListAsync();
     }
 
     public async Task<User?> GetByIdAsync(string id)
     {
-        var filter = Builders<User>.Filter.Eq(x => x.Id, id);
-        return await _collection.Find(filter).FirstOrDefaultAsync();
+        return await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<User> CreateAsync(User user)
+    {
+        await _users.InsertOneAsync(user);
+        return user;
+    }
+
+    public async Task<bool> UpdateAsync(string id, User user)
+    {
+        var result = await _users.ReplaceOneAsync(u => u.Id == id, user);
+        return result.ModifiedCount > 0;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        var result = await _users.DeleteOneAsync(u => u.Id == id);
+        return result.DeletedCount > 0;
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        var filter = Builders<User>.Filter.Eq(x => x.UserEmail, email);
-        return await _collection.Find(filter).FirstOrDefaultAsync();
+        return await _users.Find(u => u.UserEmail == email).FirstOrDefaultAsync();
     }
 
     public async Task<List<User>> GetByRoleIdAsync(string roleId)
     {
-        var filter = Builders<User>.Filter.Eq(x => x.RoleId, roleId);
-        return await _collection.Find(filter).ToListAsync();
+        return await _users.Find(u => u.RoleId == roleId).ToListAsync();
     }
 
     public async Task<List<User>> GetByAddressIdAsync(string addressId)
     {
-        var filter = Builders<User>.Filter.Eq(x => x.AddressId, addressId);
-        return await _collection.Find(filter).ToListAsync();
-    }
-
-    public async Task CreateAsync(User user)
-    {
-        await _collection.InsertOneAsync(user);
-    }
-
-    public async Task UpdateAsync(string id, User user)
-    {
-        var filter = Builders<User>.Filter.Eq(x => x.Id, id);
-        await _collection.ReplaceOneAsync(filter, user);
-    }
-
-    public async Task DeleteAsync(string id)
-    {
-        var filter = Builders<User>.Filter.Eq(x => x.Id, id);
-        await _collection.DeleteOneAsync(filter);
-    }
-
-    public async Task<bool> ExistsAsync(string id)
-    {
-        var filter = Builders<User>.Filter.Eq(x => x.Id, id);
-        return await _collection.Find(filter).AnyAsync();
-    }
-
-    public async Task<bool> EmailExistsAsync(string email)
-    {
-        var filter = Builders<User>.Filter.Eq(x => x.UserEmail, email);
-        return await _collection.Find(filter).AnyAsync();
+        return await _users.Find(u => u.AddressId == addressId).ToListAsync();
     }
 } 
