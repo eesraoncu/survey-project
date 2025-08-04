@@ -48,19 +48,12 @@ public class TestController : ControllerBase
         {
             var testSurvey = new Survey
             {
-                Name = "Test Anketi",
-                Description = "Bağlantı testi için oluşturuldu",
+                SurveyName = "Test Anketi",
+                SurveyDescription = "Bağlantı testi için oluşturuldu",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
-                Questions = new List<Question>
-                {
-                    new Question
-                    {
-                        QuestionText = "Test sorusu?",
-                        Type = "text",
-                        Required = true
-                    }
-                }
+                UsersId = "test_user_id", // Test için geçici ID
+                SurveyTypeId = "test_survey_type_id" // Test için geçici ID
             };
 
             await _mongoDBService.CreateAsync(testSurvey);
