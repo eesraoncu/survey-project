@@ -15,9 +15,16 @@ public class MongoDBService
             throw new ArgumentNullException(nameof(mongoSettings), "MongoDB ayarları bulunamadı!");
 
         var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
-        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(30);
-        settings.ConnectTimeout = TimeSpan.FromSeconds(30);
-        settings.SocketTimeout = TimeSpan.FromSeconds(30);
+        
+        // Timeout ayarları
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(60);
+        settings.ConnectTimeout = TimeSpan.FromSeconds(60);
+        settings.SocketTimeout = TimeSpan.FromSeconds(60);
+        settings.HeartbeatTimeout = TimeSpan.FromSeconds(60);
+        
+        // Not: DnsClientSettings bu sürümde mevcut değil; kaldırıldı.
+
+        // SSL ayarları
         settings.SslSettings = new SslSettings
         {
             EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12

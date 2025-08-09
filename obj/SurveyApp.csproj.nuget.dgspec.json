@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\eesra\\survey-project\\SurveyApp.csproj": {}
+    "C:\\Users\\musta\\OneDrive\\Desktop\\SurveyApp\\SurveyApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\eesra\\survey-project\\SurveyApp.csproj": {
+    "C:\\Users\\musta\\OneDrive\\Desktop\\SurveyApp\\SurveyApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\eesra\\survey-project\\SurveyApp.csproj",
+        "projectUniqueName": "C:\\Users\\musta\\OneDrive\\Desktop\\SurveyApp\\SurveyApp.csproj",
         "projectName": "SurveyApp",
-        "projectPath": "C:\\Users\\eesra\\survey-project\\SurveyApp.csproj",
-        "packagesPath": "C:\\Users\\eesra\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\eesra\\survey-project\\obj\\",
+        "projectPath": "C:\\Users\\musta\\OneDrive\\Desktop\\SurveyApp\\SurveyApp.csproj",
+        "packagesPath": "C:\\Users\\musta\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\musta\\OneDrive\\Desktop\\SurveyApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\eesra\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\musta\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -50,6 +51,14 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.0, )"
