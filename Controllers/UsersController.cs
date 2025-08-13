@@ -49,21 +49,13 @@ public sealed class UsersController : ControllerBase
         return Ok(_mapper.Map<List<UserResponse>>(list));
     }
 
-    [HttpPost]
-    public async Task<ActionResult<UserResponse>> Create([FromBody] UserRegisterRequest request)
-    {
-        var entity = _mapper.Map<User>(request);
-        // Not: Parola hashleme işlemini normalde burada yapmalısınız.
-        var created = await _userRepository.CreateAsync(entity);
-        var response = _mapper.Map<UserResponse>(created);
-        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
-    }
-
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
     {
         var existing = await _userRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
+        
+        // RoleId güncellenemez - sadece sistem tarafından değiştirilebilir
         _mapper.Map(request, existing);
         var ok = await _userRepository.UpdateAsync(id, existing);
         return ok ? NoContent() : NotFound();
@@ -73,6 +65,18 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var ok = await _userRepository.DeleteAsync(id);
+        return ok ? NoContent() : NotFound();
+    }
+
+    // Admin rolü güncelleme - sadece sistem tarafından kullanılır
+    [HttpPut("{id}/role")]
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] RoleUpdateRequest request)
+    {
+        var existing = await _userRepository.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+        
+        existing.RoleId = request.RoleId;
+        var ok = await _userRepository.UpdateAsync(id, existing);
         return ok ? NoContent() : NotFound();
     }
 }

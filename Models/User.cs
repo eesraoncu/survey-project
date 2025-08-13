@@ -33,11 +33,18 @@ public class User
 
     [BsonElement("role_id")]
     [BsonRepresentation(BsonType.Int32)]
-    public int RoleId { get; set; } // Foreign Key
+    public int RoleId { get; set; } // Foreign Key - 1: Admin, 2: Owner, 3: User
 
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [BsonElement("is_active")]
     public bool IsActive { get; set; } = true;
+
+    // Rol değişikliği için yardımcı metodlar
+    public void SetAsOwner() => RoleId = 2; // Owner
+    public void SetAsUser() => RoleId = 3;  // User
+    public bool IsAdmin => RoleId == 1;
+    public bool IsOwner => RoleId == 2;
+    public bool IsUser => RoleId == 3;
 } 

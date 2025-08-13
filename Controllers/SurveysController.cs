@@ -12,11 +12,13 @@ namespace SurveyApp.Controllers;
 public sealed class SurveysController : ControllerBase
 {
     private readonly ISurveyRepository _surveyRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public SurveysController(ISurveyRepository surveyRepository, IMapper mapper)
+    public SurveysController(ISurveyRepository surveyRepository, IUserRepository userRepository, IMapper mapper)
     {
         _surveyRepository = surveyRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -47,6 +49,15 @@ public sealed class SurveysController : ControllerBase
     {
         var entity = _mapper.Map<Survey>(request);
         var created = await _surveyRepository.CreateAsync(entity);
+        
+        // Survey oluşturulduğunda kullanıcının rolünü owner yap
+        var user = await _userRepository.GetByIdAsync(request.UsersId);
+        if (user != null && !user.IsAdmin) // Admin değilse owner yap
+        {
+            user.SetAsOwner();
+            await _userRepository.UpdateAsync(user.Id, user);
+        }
+        
         var response = _mapper.Map<SurveyResponse>(created);
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
@@ -65,6 +76,25 @@ public sealed class SurveysController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var ok = await _surveyRepository.DeleteAsync(id);
+        return ok ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{id}/complete")]
+    public async Task<IActionResult> CompleteSurvey(int id, [FromBody] SurveyCompletionRequest request)
+    {
+        var survey = await _surveyRepository.GetByIdAsync(id);
+        if (survey is null) return NotFound();
+
+        // Survey tamamlandığında kullanıcının rolünü user yap
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user != null && !user.IsAdmin) // Admin değilse user yap
+        {
+            user.SetAsUser();
+            await _userRepository.UpdateAsync(user.Id, user);
+        }
+
+        survey.IsCompleted = true;
+        var ok = await _surveyRepository.UpdateAsync(id, survey);
         return ok ? NoContent() : NotFound();
     }
 }

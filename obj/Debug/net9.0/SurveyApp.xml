@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SurveyApp</name>
+    </assembly>
+    <members>
+        <member name="T:SurveyApp.Controllers.MongoDBController">
+            <summary>
+            MongoDB işlemleri için API endpoint'leri
+            </summary>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.GetAll">
+            <summary>
+            Tüm anketleri MongoDB'den getirir
+            </summary>
+            <returns>Anket listesi</returns>
+            <response code="200">Anketler başarıyla getirildi</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.GetActiveSurveys">
+            <summary>
+            Aktif anketleri MongoDB'den getirir
+            </summary>
+            <returns>Aktif anket listesi</returns>
+            <response code="200">Aktif anketler başarıyla getirildi</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.GetById(System.String)">
+            <summary>
+            ID'ye göre anketi MongoDB'den getirir
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <returns>Anket detayları</returns>
+            <response code="200">Anket başarıyla getirildi</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+            <response code="404">Anket bulunamadı</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.Create(SurveyApp.Models.Survey)">
+            <summary>
+            Yeni anketi MongoDB'ye kaydeder
+            </summary>
+            <param name="survey">Anket verisi</param>
+            <returns>Oluşturulan anket</returns>
+            <response code="201">Anket başarıyla oluşturuldu</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.Update(System.String,SurveyApp.Models.Survey)">
+            <summary>
+            Mevcut anketi MongoDB'de günceller
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <param name="survey">Güncelleme verisi</param>
+            <returns>Güncelleme sonucu</returns>
+            <response code="204">Anket başarıyla güncellendi</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.MongoDBController.Delete(System.String)">
+            <summary>
+            Anketi MongoDB'den siler
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <returns>Silme sonucu</returns>
+            <response code="204">Anket başarıyla silindi</response>
+            <response code="400">MongoDB bağlantı hatası</response>
+        </member>
+        <member name="T:SurveyApp.Controllers.SurveysController">
+            <summary>
+            Anket yönetimi için API endpoint'leri
+            </summary>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.GetAll">
+            <summary>
+            Tüm anketleri listeler
+            </summary>
+            <returns>Anket listesi</returns>
+            <response code="200">Anketler başarıyla getirildi</response>
+            <response code="500">Sunucu hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.GetActive">
+            <summary>
+            Aktif anketleri listeler
+            </summary>
+            <returns>Aktif anket listesi</returns>
+            <response code="200">Aktif anketler başarıyla getirildi</response>
+            <response code="500">Sunucu hatası</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.GetById(System.String)">
+            <summary>
+            ID'ye göre anket getirir
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <returns>Anket detayları</returns>
+            <response code="200">Anket başarıyla getirildi</response>
+            <response code="404">Anket bulunamadı</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.Create(SurveyApp.Application.DTO.Request.SurveyCreateRequest)">
+            <summary>
+            Yeni anket oluşturur
+            </summary>
+            <param name="request">Anket oluşturma verisi</param>
+            <returns>Oluşturulan anket</returns>
+            <response code="201">Anket başarıyla oluşturuldu</response>
+            <response code="400">Geçersiz veri</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.Update(System.String,SurveyApp.Application.DTO.Request.SurveyUpdateRequest)">
+            <summary>
+            Mevcut anketi günceller
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <param name="request">Güncelleme verisi</param>
+            <returns>Güncelleme sonucu</returns>
+            <response code="204">Anket başarıyla güncellendi</response>
+            <response code="400">Geçersiz veri</response>
+            <response code="404">Anket bulunamadı</response>
+        </member>
+        <member name="M:SurveyApp.Controllers.SurveysController.Delete(System.String)">
+            <summary>
+            Anketi siler
+            </summary>
+            <param name="id">Anket ID'si</param>
+            <returns>Silme sonucu</returns>
+            <response code="204">Anket başarıyla silindi</response>
+            <response code="404">Anket bulunamadı</response>
+        </member>
+    </members>
+</doc>

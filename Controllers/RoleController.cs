@@ -5,12 +5,12 @@ using SurveyApp.Models;
 namespace SurveyApp.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public sealed class RolesController : ControllerBase
+[Route("api/role")]
+public sealed class RoleController : ControllerBase
 {
     private readonly IRoleRepository _roleRepository;
 
-    public RolesController(IRoleRepository roleRepository)
+    public RoleController(IRoleRepository roleRepository)
     {
         _roleRepository = roleRepository;
     }
@@ -30,12 +30,8 @@ public sealed class RolesController : ControllerBase
         return Ok(entity);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Role>> Create([FromBody] Role role)
-    {
-        var created = await _roleRepository.CreateAsync(role);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    }
+    // Role oluşturma kaldırıldı - sadece manuel eklenebilir
+    // [HttpPost] - Kaldırıldı
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] Role role)
@@ -43,15 +39,12 @@ public sealed class RolesController : ControllerBase
         var existing = await _roleRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
         
-        role.Id = id; // ID'yi koru
-        var ok = await _roleRepository.UpdateAsync(id, role);
+        // Sadece role_name güncellenebilir, ID değiştirilemez
+        existing.RoleName = role.RoleName;
+        var ok = await _roleRepository.UpdateAsync(id, existing);
         return ok ? NoContent() : NotFound();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var ok = await _roleRepository.DeleteAsync(id);
-        return ok ? NoContent() : NotFound();
-    }
+    // Role silme kaldırıldı - sistem rolleri silinemez
+    // [HttpDelete] - Kaldırıldı
 }

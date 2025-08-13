@@ -104,3 +104,5 @@ C:\Users\eesra\survey-project\obj\Debug\net9.0\SurveyApp.genruntimeconfig.cache
 C:\Users\eesra\survey-project\obj\Debug\net9.0\ref\SurveyApp.dll
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\eesra\survey-project\bin\Debug\net9.0\AutoMapper.dll
+C:\Users\eesra\survey-project\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
