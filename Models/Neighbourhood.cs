@@ -6,8 +6,8 @@ namespace SurveyApp.Models;
 public class Neighbourhood
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    [BsonRepresentation(BsonType.Int32)]
+    public int Id { get; set; }
 
     [BsonElement("neighbourhood_name")]
     public string NeighbourhoodName { get; set; } = string.Empty;
@@ -16,8 +16,8 @@ public class Neighbourhood
     public string NeighbourhoodExplanation { get; set; } = string.Empty;
 
     [BsonElement("district_township_town_id")]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string DistrictTownshipTownId { get; set; } = string.Empty; // Foreign Key
+    [BsonRepresentation(BsonType.Int32)]
+    public int DistrictTownshipTownId { get; set; } // Foreign Key
 
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

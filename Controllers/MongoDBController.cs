@@ -44,7 +44,7 @@ public class MongoDBController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(string id)
+    public async Task<IActionResult> GetById(int id)
     {
         try
         {
@@ -76,7 +76,7 @@ public class MongoDBController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] Survey survey)
+    public async Task<IActionResult> Update(int id, [FromBody] Survey survey)
     {
         try
         {
@@ -90,7 +90,7 @@ public class MongoDBController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {

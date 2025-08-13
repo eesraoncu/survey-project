@@ -6,8 +6,8 @@ namespace SurveyApp.Models;
 public class Role
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    [BsonRepresentation(BsonType.Int32)]
+    public int Id { get; set; }
 
     [BsonElement("role_name")]
     public string RoleName { get; set; } = string.Empty;

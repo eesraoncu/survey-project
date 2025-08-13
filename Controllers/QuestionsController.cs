@@ -28,7 +28,7 @@ public sealed class QuestionsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<QuestionResponse>> GetById(string id)
+    public async Task<ActionResult<QuestionResponse>> GetById(int id)
     {
         var entity = await _questionRepository.GetByIdAsync(id);
         if (entity is null) return NotFound();
@@ -36,7 +36,7 @@ public sealed class QuestionsController : ControllerBase
     }
 
     [HttpGet("by-survey/{surveyId}")]
-    public async Task<ActionResult<List<QuestionResponse>>> GetBySurveyId(string surveyId)
+    public async Task<ActionResult<List<QuestionResponse>>> GetBySurveyId(int surveyId)
     {
         var list = await _questionRepository.GetBySurveyIdAsync(surveyId);
         return Ok(_mapper.Map<List<QuestionResponse>>(list));
@@ -52,7 +52,7 @@ public sealed class QuestionsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] QuestionUpdateRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] QuestionUpdateRequest request)
     {
         var existing = await _questionRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
@@ -62,7 +62,7 @@ public sealed class QuestionsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         var ok = await _questionRepository.DeleteAsync(id);
         return ok ? NoContent() : NotFound();

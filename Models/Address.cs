@@ -6,12 +6,12 @@ namespace SurveyApp.Models;
 public class Address
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    [BsonRepresentation(BsonType.Int32)]
+    public int Id { get; set; }
 
     [BsonElement("neighbourhood_id")]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string NeighbourhoodId { get; set; } = string.Empty; // Foreign Key
+    [BsonRepresentation(BsonType.Int32)]
+    public int NeighbourhoodId { get; set; } // Foreign Key
 
     [BsonElement("address_details")]
     public string AddressDetails { get; set; } = string.Empty;

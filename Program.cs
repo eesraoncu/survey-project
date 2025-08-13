@@ -20,19 +20,42 @@ builder.Services.AddSingleton<MongoDBService>();
 var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
 if (mongoSettings is not null && !string.IsNullOrWhiteSpace(mongoSettings.ConnectionString))
 {
-    builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoSettings.ConnectionString));
+    builder.Services.AddSingleton<IMongoClient>(_ => 
+    {
+        var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
+        
+        // SSL'i tamamen devre dışı bırak
+        settings.SslSettings = new SslSettings
+        {
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.None,
+            CheckCertificateRevocation = false
+        };
+        
+        // Timeout ayarları
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(60);
+        settings.ConnectTimeout = TimeSpan.FromSeconds(60);
+        settings.SocketTimeout = TimeSpan.FromSeconds(60);
+        settings.HeartbeatTimeout = TimeSpan.FromSeconds(60);
+        
+        return new MongoClient(settings);
+    });
+    
     builder.Services.AddSingleton<IMongoDatabase>(sp =>
     {
         var client = sp.GetRequiredService<IMongoClient>();
         return client.GetDatabase(mongoSettings.DatabaseName);
     });
-
-    // Repository kayıtları
-    builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
-    builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
-    builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
-    builder.Services.AddScoped<IUserRepository, UserRepository>();
+    
+    // AutoIncrementService'i ekle
+    builder.Services.AddScoped<AutoIncrementService>();
 }
+
+// Repository'leri kaydet
+builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 var app = builder.Build();
 
@@ -42,11 +65,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else
-{
-    app.UseHttpsRedirection();
-}
 
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

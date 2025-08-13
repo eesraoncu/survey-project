@@ -35,7 +35,7 @@ public sealed class SurveysController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<SurveyResponse>> GetById(string id)
+    public async Task<ActionResult<SurveyResponse>> GetById(int id)
     {
         var entity = await _surveyRepository.GetByIdAsync(id);
         if (entity is null) return NotFound();
@@ -52,7 +52,7 @@ public sealed class SurveysController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] SurveyUpdateRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] SurveyUpdateRequest request)
     {
         var existing = await _surveyRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
@@ -62,7 +62,7 @@ public sealed class SurveysController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         var ok = await _surveyRepository.DeleteAsync(id);
         return ok ? NoContent() : NotFound();

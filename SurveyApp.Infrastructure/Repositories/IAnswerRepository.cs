@@ -5,11 +5,11 @@ namespace SurveyApp.Infrastructure.Repositories;
 public interface IAnswerRepository
 {
     Task<List<Answer>> GetAllAsync();
-    Task<Answer?> GetByIdAsync(string id);
+    Task<Answer?> GetByIdAsync(int id);
     Task<Answer> CreateAsync(Answer answer);
-    Task<bool> UpdateAsync(string id, Answer answer);
-    Task<bool> DeleteAsync(string id);
-    Task<List<Answer>> GetByQuestionIdAsync(string questionId);
-    Task<List<Answer>> GetByUserIdAsync(string userId);
-    Task<List<Answer>> GetBySurveyIdAsync(string surveyId);
+    Task<bool> UpdateAsync(int id, Answer answer);
+    Task<bool> DeleteAsync(int id);
+    Task<List<Answer>> GetByQuestionIdAsync(int questionId);
+    Task<List<Answer>> GetByUserIdAsync(int userId);
+    Task<List<Answer>> GetBySurveyIdAsync(int surveyId);
 } 

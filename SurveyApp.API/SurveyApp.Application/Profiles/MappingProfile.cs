@@ -43,13 +43,11 @@ public sealed class MappingProfile : Profile
             .ForMember(d => d.CreatedAt, o => o.Ignore());
         CreateMap<Answer, AnswerResponse>();
 
-        // User (password maplenmez)
-        CreateMap<UserRegisterRequest, User>()
-            .ForMember(d => d.UserPassword, o => o.Ignore());
+        // User
+        CreateMap<UserRegisterRequest, User>();
         CreateMap<UserUpdateRequest, User>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.UserEmail, o => o.Ignore())
-            .ForMember(d => d.UserPassword, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore());
         CreateMap<User, UserResponse>();
     }

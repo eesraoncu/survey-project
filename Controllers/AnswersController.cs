@@ -28,7 +28,7 @@ public sealed class AnswersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<AnswerResponse>> GetById(string id)
+    public async Task<ActionResult<AnswerResponse>> GetById(int id)
     {
         var entity = await _answerRepository.GetByIdAsync(id);
         if (entity is null) return NotFound();
@@ -36,21 +36,21 @@ public sealed class AnswersController : ControllerBase
     }
 
     [HttpGet("by-question/{questionId}")]
-    public async Task<ActionResult<List<AnswerResponse>>> GetByQuestionId(string questionId)
+    public async Task<ActionResult<List<AnswerResponse>>> GetByQuestionId(int questionId)
     {
         var list = await _answerRepository.GetByQuestionIdAsync(questionId);
         return Ok(_mapper.Map<List<AnswerResponse>>(list));
     }
 
     [HttpGet("by-user/{userId}")]
-    public async Task<ActionResult<List<AnswerResponse>>> GetByUserId(string userId)
+    public async Task<ActionResult<List<AnswerResponse>>> GetByUserId(int userId)
     {
         var list = await _answerRepository.GetByUserIdAsync(userId);
         return Ok(_mapper.Map<List<AnswerResponse>>(list));
     }
 
     [HttpGet("by-survey/{surveyId}")]
-    public async Task<ActionResult<List<AnswerResponse>>> GetBySurveyId(string surveyId)
+    public async Task<ActionResult<List<AnswerResponse>>> GetBySurveyId(int surveyId)
     {
         var list = await _answerRepository.GetBySurveyIdAsync(surveyId);
         return Ok(_mapper.Map<List<AnswerResponse>>(list));
@@ -66,7 +66,7 @@ public sealed class AnswersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] AnswerUpdateRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] AnswerUpdateRequest request)
     {
         var existing = await _answerRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
@@ -76,7 +76,7 @@ public sealed class AnswersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         var ok = await _answerRepository.DeleteAsync(id);
         return ok ? NoContent() : NotFound();

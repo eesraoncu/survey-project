@@ -1,15 +1,18 @@
 using MongoDB.Driver;
 using SurveyApp.Models;
+using SurveyApp.Services;
 
 namespace SurveyApp.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
     private readonly IMongoCollection<User> _users;
+    private readonly AutoIncrementService _autoIncrementService;
 
-    public UserRepository(IMongoDatabase database)
+    public UserRepository(IMongoDatabase database, AutoIncrementService autoIncrementService)
     {
         _users = database.GetCollection<User>("users");
+        _autoIncrementService = autoIncrementService;
     }
 
     public async Task<List<User>> GetAllAsync()
@@ -17,24 +20,26 @@ public class UserRepository : IUserRepository
         return await _users.Find(_ => true).ToListAsync();
     }
 
-    public async Task<User?> GetByIdAsync(string id)
+    public async Task<User?> GetByIdAsync(int id)
     {
         return await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task<User> CreateAsync(User user)
     {
+        // Otomatik ID ataması
+        user.Id = await _autoIncrementService.GetNextIdAsync("users");
         await _users.InsertOneAsync(user);
         return user;
     }
 
-    public async Task<bool> UpdateAsync(string id, User user)
+    public async Task<bool> UpdateAsync(int id, User user)
     {
         var result = await _users.ReplaceOneAsync(u => u.Id == id, user);
         return result.ModifiedCount > 0;
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(int id)
     {
         var result = await _users.DeleteOneAsync(u => u.Id == id);
         return result.DeletedCount > 0;
@@ -45,12 +50,12 @@ public class UserRepository : IUserRepository
         return await _users.Find(u => u.UserEmail == email).FirstOrDefaultAsync();
     }
 
-    public async Task<List<User>> GetByRoleIdAsync(string roleId)
+    public async Task<List<User>> GetByRoleIdAsync(int roleId)
     {
         return await _users.Find(u => u.RoleId == roleId).ToListAsync();
     }
 
-    public async Task<List<User>> GetByAddressIdAsync(string addressId)
+    public async Task<List<User>> GetByAddressIdAsync(int addressId)
     {
         return await _users.Find(u => u.AddressId == addressId).ToListAsync();
     }

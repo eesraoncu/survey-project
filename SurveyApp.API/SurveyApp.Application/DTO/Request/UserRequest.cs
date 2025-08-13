@@ -8,9 +8,9 @@ public sealed class UserRegisterRequest
     public string UserSurname { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
     public string UserPassword { get; set; } = string.Empty; // Hashlenecek
-    public string AddressId { get; set; } = string.Empty;
+    public int AddressId { get; set; }
     public int UserAge { get; set; }
-    public string RoleId { get; set; } = string.Empty;
+    public int RoleId { get; set; }
 }
 
 public sealed class UserLoginRequest
@@ -25,6 +25,6 @@ public sealed class UserUpdateRequest
     public string UserSurname { get; set; } = string.Empty;
     public string UserAddress { get; set; } = string.Empty;
     public int UserAge { get; set; }
-    public string RoleId { get; set; } = string.Empty;
+    public int RoleId { get; set; }
 }
 

@@ -6,8 +6,8 @@ namespace SurveyApp.Models;
 public class User
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    [BsonRepresentation(BsonType.Int32)]
+    public int Id { get; set; }
 
     [BsonElement("user_name")]
     public string UserName { get; set; } = string.Empty;
@@ -28,12 +28,12 @@ public class User
     public int UserAge { get; set; }
 
     [BsonElement("address_id")]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string AddressId { get; set; } = string.Empty; // Foreign Key
+    [BsonRepresentation(BsonType.Int32)]
+    public int AddressId { get; set; } // Foreign Key
 
     [BsonElement("role_id")]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string RoleId { get; set; } = string.Empty; // Foreign Key
+    [BsonRepresentation(BsonType.Int32)]
+    public int RoleId { get; set; } // Foreign Key
 
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

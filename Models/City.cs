@@ -6,8 +6,8 @@ namespace SurveyApp.Models;
 public class City
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    [BsonRepresentation(BsonType.Int32)]
+    public int Id { get; set; }
 
     [BsonElement("city_name")]
     public string CityName { get; set; } = string.Empty;

@@ -22,12 +22,11 @@ public class MongoDBService
         settings.SocketTimeout = TimeSpan.FromSeconds(60);
         settings.HeartbeatTimeout = TimeSpan.FromSeconds(60);
         
-        // Not: DnsClientSettings bu sürümde mevcut değil; kaldırıldı.
-
-        // SSL ayarları
+        // SSL'i tamamen devre dışı bırak
         settings.SslSettings = new SslSettings
         {
-            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.None,
+            CheckCertificateRevocation = false
         };
 
         var client = new MongoClient(settings);
@@ -40,7 +39,7 @@ public class MongoDBService
         return await _collection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<Survey?> GetByIdAsync(string id)
+    public async Task<Survey?> GetByIdAsync(int id)
     {
         var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
         return await _collection.Find(filter).FirstOrDefaultAsync();
@@ -51,13 +50,13 @@ public class MongoDBService
         await _collection.InsertOneAsync(survey);
     }
 
-    public async Task UpdateAsync(string id, Survey survey)
+    public async Task UpdateAsync(int id, Survey survey)
     {
         var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
         await _collection.ReplaceOneAsync(filter, survey);
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(int id)
     {
         var filter = Builders<Survey>.Filter.Eq(x => x.Id, id);
         await _collection.DeleteOneAsync(filter);

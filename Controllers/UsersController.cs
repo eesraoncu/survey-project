@@ -28,7 +28,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserResponse>> GetById(string id)
+    public async Task<ActionResult<UserResponse>> GetById(int id)
     {
         var entity = await _userRepository.GetByIdAsync(id);
         if (entity is null) return NotFound();
@@ -36,14 +36,14 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet("by-role/{roleId}")]
-    public async Task<ActionResult<List<UserResponse>>> GetByRoleId(string roleId)
+    public async Task<ActionResult<List<UserResponse>>> GetByRoleId(int roleId)
     {
         var list = await _userRepository.GetByRoleIdAsync(roleId);
         return Ok(_mapper.Map<List<UserResponse>>(list));
     }
 
     [HttpGet("by-address/{addressId}")]
-    public async Task<ActionResult<List<UserResponse>>> GetByAddressId(string addressId)
+    public async Task<ActionResult<List<UserResponse>>> GetByAddressId(int addressId)
     {
         var list = await _userRepository.GetByAddressIdAsync(addressId);
         return Ok(_mapper.Map<List<UserResponse>>(list));
@@ -60,7 +60,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] UserUpdateRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
     {
         var existing = await _userRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
@@ -70,7 +70,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(int id)
     {
         var ok = await _userRepository.DeleteAsync(id);
         return ok ? NoContent() : NotFound();
