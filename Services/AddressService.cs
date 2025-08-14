@@ -5,7 +5,7 @@ namespace SurveyApp.Services;
 
 public interface IAddressService
 {
-    Task<Address> CreateAddressAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName, string addressDetails);
+    Task<Address?> CreateAddressAsync(string? cityName, string? districtName, string? districtTownshipTownName, string? neighbourhoodName, string? addressDetails);
     Task<Address> GetAddressAsync(int addressId);
     Task<bool> ValidateAddressAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName);
     
@@ -25,8 +25,17 @@ public class AddressService : IAddressService
         _database = database;
     }
 
-    public async Task<Address> CreateAddressAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName, string addressDetails)
+    public async Task<Address?> CreateAddressAsync(string? cityName, string? districtName, string? districtTownshipTownName, string? neighbourhoodName, string? addressDetails)
     {
+        // Eğer adres bilgileri boşsa null döndür
+        if (string.IsNullOrWhiteSpace(cityName) || 
+            string.IsNullOrWhiteSpace(districtName) || 
+            string.IsNullOrWhiteSpace(districtTownshipTownName) || 
+            string.IsNullOrWhiteSpace(neighbourhoodName))
+        {
+            return null;
+        }
+
         // Adres geçerliliğini kontrol et
         if (!await ValidateAddressAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName))
         {
@@ -37,7 +46,7 @@ public class AddressService : IAddressService
         var address = new Address
         {
             NeighbourhoodId = await GetNeighbourhoodIdByNameAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName),
-            AddressDetails = addressDetails,
+            AddressDetails = addressDetails ?? string.Empty,
             CreatedAt = DateTime.UtcNow
         };
 

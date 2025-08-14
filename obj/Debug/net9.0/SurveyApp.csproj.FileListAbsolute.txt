@@ -106,3 +106,11 @@ C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 C:\Users\eesra\survey-project\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\eesra\survey-project\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll

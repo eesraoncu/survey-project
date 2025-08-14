@@ -4,6 +4,9 @@ using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Services;
 using AutoMapper;
 using SurveyApp.Application.Profiles;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);   
 
@@ -12,6 +15,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+// JWT Ayarları
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 // MongoDB DI kayıtları (IMongoClient, IMongoDatabase)
 var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
@@ -47,8 +53,31 @@ if (mongoSettings is not null && !string.IsNullOrWhiteSpace(mongoSettings.Connec
     builder.Services.AddScoped<AutoIncrementService>();
 }
 
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+if (jwtSettings != null)
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
+                ValidateIssuer = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwtSettings.Audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+}
+
 // Service'leri kaydet
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 // Repository'leri kaydet
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
@@ -67,6 +96,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

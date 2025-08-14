@@ -10,12 +10,12 @@ public sealed class UserRegisterRequest
     public string UserPassword { get; set; } = string.Empty; // Hashlenecek
     public int UserAge { get; set; }
     
-    // Adres bilgileri - Frontend'den isim olarak gelecek
-    public string CityName { get; set; } = string.Empty;
-    public string DistrictName { get; set; } = string.Empty;
-    public string DistrictTownshipTownName { get; set; } = string.Empty;
-    public string NeighbourhoodName { get; set; } = string.Empty;
-    public string AddressDetails { get; set; } = string.Empty; // Sokak, bina, daire vs.
+    // Adres bilgileri - Opsiyonel, boş bırakılabilir
+    public string? CityName { get; set; }
+    public string? DistrictName { get; set; }
+    public string? DistrictTownshipTownName { get; set; }
+    public string? NeighbourhoodName { get; set; }
+    public string? AddressDetails { get; set; } // Sokak, bina, daire vs.
     
     // RoleId artık otomatik olarak 3 (user) olacak, admin sadece manuel eklenebilir
 }

@@ -29,7 +29,7 @@ public class User
 
     [BsonElement("address_id")]
     [BsonRepresentation(BsonType.Int32)]
-    public int AddressId { get; set; } // Foreign Key
+    public int? AddressId { get; set; } // Foreign Key - Opsiyonel
 
     [BsonElement("role_id")]
     [BsonRepresentation(BsonType.Int32)]
