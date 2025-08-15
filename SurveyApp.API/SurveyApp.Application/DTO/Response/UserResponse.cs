@@ -10,8 +10,8 @@ public sealed class UserResponse
     public string UserEmail { get; set; } = string.Empty;
     public string UserAddress { get; set; } = string.Empty;
     public int UserAge { get; set; }
-    public int AddressId { get; set; }
-    public int RoleId { get; set; }
+    public int? AddressId { get; set; }
+    public List<string> Roles { get; set; } = new List<string>();
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
 }

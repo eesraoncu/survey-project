@@ -31,9 +31,10 @@ public class User
     [BsonRepresentation(BsonType.Int32)]
     public int? AddressId { get; set; } // Foreign Key - Opsiyonel
 
+    // Eski role_id alanını ignore et (migration için)
     [BsonElement("role_id")]
-    [BsonRepresentation(BsonType.Int32)]
-    public int RoleId { get; set; } // Foreign Key - 1: Admin, 2: Owner, 3: User
+    [BsonIgnore]
+    public int? OldRoleId { get; set; }
 
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -41,10 +42,14 @@ public class User
     [BsonElement("is_active")]
     public bool IsActive { get; set; } = true;
 
-    // Rol değişikliği için yardımcı metodlar
-    public void SetAsOwner() => RoleId = 2; // Owner
-    public void SetAsUser() => RoleId = 3;  // User
-    public bool IsAdmin => RoleId == 1;
-    public bool IsOwner => RoleId == 2;
-    public bool IsUser => RoleId == 3;
+    // Navigation property - Roller listesi
+    [BsonIgnore]
+    public List<Role> Roles { get; set; } = new List<Role>();
+
+    // Rol kontrolü için yardımcı metodlar
+    public bool HasRole(string roleName) => Roles.Any(r => r.RoleName == roleName);
+    public bool HasRole(int roleId) => Roles.Any(r => r.Id == roleId);
+    public bool IsAdmin => HasRole("admin");
+    public bool IsOwner => HasRole("owner");
+    public bool IsUser => HasRole("user");
 } 

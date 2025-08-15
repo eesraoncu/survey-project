@@ -11,11 +11,11 @@ public sealed class UserRegisterRequest
     public int UserAge { get; set; }
     
     // Adres bilgileri - Opsiyonel, boş bırakılabilir
-    public string? CityName { get; set; }
-    public string? DistrictName { get; set; }
-    public string? DistrictTownshipTownName { get; set; }
-    public string? NeighbourhoodName { get; set; }
-    public string? AddressDetails { get; set; } // Sokak, bina, daire vs.
+    public string? Il { get; set; }
+    public string? Ilce { get; set; }
+    public string? SemtBucakBelde { get; set; }
+    public string? Mahalle { get; set; }
+    public string? AdresDetay { get; set; } // Sokak, bina, daire vs.
     
     // RoleId artık otomatik olarak 3 (user) olacak, admin sadece manuel eklenebilir
 }

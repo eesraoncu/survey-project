@@ -44,4 +44,15 @@ public class RoleRepository : IRoleRepository
         var result = await _roles.DeleteOneAsync(r => r.Id == id);
         return result.DeletedCount > 0;
     }
+
+    public async Task<List<Role>> GetByIdsAsync(List<int> ids)
+    {
+        var filter = Builders<Role>.Filter.In(r => r.Id, ids);
+        return await _roles.Find(filter).ToListAsync();
+    }
+
+    public async Task<Role?> GetByNameAsync(string roleName)
+    {
+        return await _roles.Find(r => r.RoleName == roleName && r.IsActive).FirstOrDefaultAsync();
+    }
 }

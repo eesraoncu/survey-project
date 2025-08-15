@@ -16,8 +16,22 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
+// CORS ayarlarını ekle
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // JWT Ayarları
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// Google Auth Ayarları
+builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("GoogleAuth"));
 
 // MongoDB DI kayıtları (IMongoClient, IMongoDatabase)
 var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
@@ -27,10 +41,10 @@ if (mongoSettings is not null && !string.IsNullOrWhiteSpace(mongoSettings.Connec
     {
         var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
         
-        // SSL'i tamamen devre dışı bırak
+        // TLS 1.2'yi zorunlu tut
         settings.SslSettings = new SslSettings
         {
-            EnabledSslProtocols = System.Security.Authentication.SslProtocols.None,
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12,
             CheckCertificateRevocation = false
         };
         
@@ -74,16 +88,36 @@ if (jwtSettings != null)
         });
 }
 
+// Trello Auth ayarlarını yapılandır
+builder.Services.Configure<TrelloAuthSettings>(builder.Configuration.GetSection("TrelloAuth"));
+
+// Jira Auth ayarlarını yapılandır
+builder.Services.Configure<JiraAuthSettings>(builder.Configuration.GetSection("JiraAuth"));
+
+// HttpClient'ı ekle (Jira API için)
+builder.Services.AddHttpClient("JiraClient", client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "SurveyApp/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Service'leri kaydet
-builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IAdresService, AdresService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<ITrelloAuthService, TrelloAuthService>();
+builder.Services.AddScoped<IJiraAuthService, JiraAuthService>();
+builder.Services.AddScoped<MigrationService>();
 
 // Repository'leri kaydet
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 var app = builder.Build();
@@ -96,8 +130,26 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// CORS middleware'ini ekle (UseAuthentication'dan önce)
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Migration'ı çalıştır (sadece bir kez)
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        var migrationService = app.Services.GetRequiredService<MigrationService>();
+        await migrationService.MigrateUsersToNewRoleSystem();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration hatası: {ex.Message}");
+    }
+}
 
 app.Run(); 

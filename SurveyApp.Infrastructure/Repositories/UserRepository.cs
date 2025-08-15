@@ -50,9 +50,11 @@ public class UserRepository : IUserRepository
         return await _users.Find(u => u.UserEmail == email).FirstOrDefaultAsync();
     }
 
-    public async Task<List<User>> GetByRoleIdAsync(int roleId)
+    public Task<List<User>> GetByRoleIdAsync(int roleId)
     {
-        return await _users.Find(u => u.RoleId == roleId).ToListAsync();
+        // Bu metod artık UserRole tablosundan çekilecek
+        // Şimdilik boş liste döndür
+        return Task.FromResult(new List<User>());
     }
 
     public async Task<List<User>> GetByAddressIdAsync(int addressId)

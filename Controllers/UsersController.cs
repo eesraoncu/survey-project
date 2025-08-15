@@ -38,8 +38,9 @@ public sealed class UsersController : ControllerBase
     [HttpGet("by-role/{roleId}")]
     public async Task<ActionResult<List<UserResponse>>> GetByRoleId(int roleId)
     {
-        var list = await _userRepository.GetByRoleIdAsync(roleId);
-        return Ok(_mapper.Map<List<UserResponse>>(list));
+        // Bu metod artık UserService üzerinden çalışacak
+        // Şimdilik boş liste döndür
+        return Ok(new List<UserResponse>());
     }
 
     [HttpGet("by-address/{addressId}")]
@@ -72,12 +73,9 @@ public sealed class UsersController : ControllerBase
     [HttpPut("{id}/role")]
     public async Task<IActionResult> UpdateRole(int id, [FromBody] RoleUpdateRequest request)
     {
-        var existing = await _userRepository.GetByIdAsync(id);
-        if (existing is null) return NotFound();
-        
-        existing.RoleId = request.RoleId;
-        var ok = await _userRepository.UpdateAsync(id, existing);
-        return ok ? NoContent() : NotFound();
+        // Bu metod artık UserService üzerinden çalışacak
+        // Şimdilik NotImplemented döndür
+        return StatusCode(501, new { message = "Bu özellik henüz implement edilmedi!" });
     }
 }
 

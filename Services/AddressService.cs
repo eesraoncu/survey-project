@@ -3,83 +3,83 @@ using MongoDB.Driver;
 
 namespace SurveyApp.Services;
 
-public interface IAddressService
+public interface IAdresService
 {
-    Task<Address?> CreateAddressAsync(string? cityName, string? districtName, string? districtTownshipTownName, string? neighbourhoodName, string? addressDetails);
-    Task<Address> GetAddressAsync(int addressId);
-    Task<bool> ValidateAddressAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName);
+    Task<Adres?> CreateAdresAsync(string? il, string? ilce, string? semt_bucak_belde, string? mahalle, string? adresDetay);
+    Task<Adres> GetAdresAsync(int adresId);
+    Task<bool> ValidateAdresAsync(string il, string ilce, string semt_bucak_belde, string mahalle);
     
     // Dropdown'lar için gerekli metodlar
-    Task<List<City>> GetAllCitiesAsync();
-    Task<List<District>> GetDistrictsByCityAsync(string cityName);
-    Task<List<DistrictTownshipTown>> GetDistrictTownshipTownsByDistrictAsync(string cityName, string districtName);
-    Task<List<Neighbourhood>> GetNeighbourhoodsByDistrictTownshipTownAsync(string cityName, string districtName, string districtTownshipTownName);
+    Task<List<Il>> GetAllIllerAsync();
+    Task<List<Ilce>> GetIlcelerByIlAsync(string il);
+    Task<List<SemtBucakBelde>> GetSemtlerByIlceAsync(string il, string ilce);
+    Task<List<Mahalle>> GetMahallelerBySemtAsync(string il, string ilce, string semt_bucak_belde);
 }
 
-public class AddressService : IAddressService
+public class AdresService : IAdresService
 {
     private readonly IMongoDatabase _database;
 
-    public AddressService(IMongoDatabase database)
+    public AdresService(IMongoDatabase database)
     {
         _database = database;
     }
 
-    public async Task<Address?> CreateAddressAsync(string? cityName, string? districtName, string? districtTownshipTownName, string? neighbourhoodName, string? addressDetails)
+    public async Task<Adres?> CreateAdresAsync(string? il, string? ilce, string? semt_bucak_belde, string? mahalle, string? adresDetay)
     {
         // Eğer adres bilgileri boşsa null döndür
-        if (string.IsNullOrWhiteSpace(cityName) || 
-            string.IsNullOrWhiteSpace(districtName) || 
-            string.IsNullOrWhiteSpace(districtTownshipTownName) || 
-            string.IsNullOrWhiteSpace(neighbourhoodName))
+        if (string.IsNullOrWhiteSpace(il) || 
+            string.IsNullOrWhiteSpace(ilce) || 
+            string.IsNullOrWhiteSpace(semt_bucak_belde) || 
+            string.IsNullOrWhiteSpace(mahalle))
         {
             return null;
         }
 
         // Adres geçerliliğini kontrol et
-        if (!await ValidateAddressAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName))
+        if (!await ValidateAdresAsync(il, ilce, semt_bucak_belde, mahalle))
         {
             throw new ArgumentException("Geçersiz adres bilgileri!");
         }
 
         // Yeni adres oluştur
-        var address = new Address
+        var adres = new Adres
         {
-            NeighbourhoodId = await GetNeighbourhoodIdByNameAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName),
-            AddressDetails = addressDetails ?? string.Empty,
+            MahalleId = await GetMahalleIdByNameAsync(il, ilce, semt_bucak_belde, mahalle),
+            AdresDetay = adresDetay ?? string.Empty,
             CreatedAt = DateTime.UtcNow
         };
 
         // AutoIncrementService ile ID al
-        var addressCollection = _database.GetCollection<Address>("address");
-        var maxId = await addressCollection.Find(_ => true).SortByDescending(x => x.Id).Limit(1).FirstOrDefaultAsync();
-        address.Id = (maxId?.Id ?? 0) + 1;
+        var adresCollection = _database.GetCollection<Adres>("address");
+        var maxId = await adresCollection.Find(_ => true).SortByDescending(x => x.Id).Limit(1).FirstOrDefaultAsync();
+        adres.Id = (maxId?.Id ?? 0) + 1;
 
-        await addressCollection.InsertOneAsync(address);
-        return address;
+        await adresCollection.InsertOneAsync(adres);
+        return adres;
     }
 
-    public async Task<Address> GetAddressAsync(int addressId)
+    public async Task<Adres> GetAdresAsync(int adresId)
     {
-        var addressCollection = _database.GetCollection<Address>("address");
-        return await addressCollection.Find(x => x.Id == addressId).FirstOrDefaultAsync();
+        var adresCollection = _database.GetCollection<Adres>("address");
+        return await adresCollection.Find(x => x.Id == adresId).FirstOrDefaultAsync();
     }
 
-    public async Task<bool> ValidateAddressAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName)
+    public async Task<bool> ValidateAdresAsync(string il, string ilce, string semt_bucak_belde, string mahalle)
     {
         try
         {
-            var city = await GetCityByNameAsync(cityName);
-            if (city == null) return false;
+            var ilData = await GetIlByNameAsync(il);
+            if (ilData == null) return false;
 
-            var district = await GetDistrictByNameAsync(cityName, districtName);
-            if (district == null) return false;
+            var ilceData = await GetIlceByNameAsync(il, ilce);
+            if (ilceData == null) return false;
 
-            var dtt = await GetDistrictTownshipTownByNameAsync(cityName, districtName, districtTownshipTownName);
-            if (dtt == null) return false;
+            var semtData = await GetSemtByNameAsync(il, ilce, semt_bucak_belde);
+            if (semtData == null) return false;
 
-            var neighbourhood = await GetNeighbourhoodByNameAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName);
-            if (neighbourhood == null) return false;
+            var mahalleData = await GetMahalleByNameAsync(il, ilce, semt_bucak_belde, mahalle);
+            if (mahalleData == null) return false;
 
             return true;
         }
@@ -90,76 +90,76 @@ public class AddressService : IAddressService
     }
 
     // Dropdown'lar için gerekli metodlar
-    public async Task<List<City>> GetAllCitiesAsync()
+    public async Task<List<Il>> GetAllIllerAsync()
     {
-        var cityCollection = _database.GetCollection<City>("city");
-        return await cityCollection.Find(_ => true).ToListAsync();
+        var ilCollection = _database.GetCollection<Il>("il");
+        return await ilCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<List<District>> GetDistrictsByCityAsync(string cityName)
+    public async Task<List<Ilce>> GetIlcelerByIlAsync(string il)
     {
-        var city = await GetCityByNameAsync(cityName);
-        if (city == null) return new List<District>();
+        var ilData = await GetIlByNameAsync(il);
+        if (ilData == null) return new List<Ilce>();
 
-        var districtCollection = _database.GetCollection<District>("district");
-        return await districtCollection.Find(x => x.CityId == city.Id).ToListAsync();
+        var ilceCollection = _database.GetCollection<Ilce>("ilce");
+        return await ilceCollection.Find(x => x.IlId == ilData.IlId).ToListAsync();
     }
 
-    public async Task<List<DistrictTownshipTown>> GetDistrictTownshipTownsByDistrictAsync(string cityName, string districtName)
+    public async Task<List<SemtBucakBelde>> GetSemtlerByIlceAsync(string il, string ilce)
     {
-        var district = await GetDistrictByNameAsync(cityName, districtName);
-        if (district == null) return new List<DistrictTownshipTown>();
+        var ilceData = await GetIlceByNameAsync(il, ilce);
+        if (ilceData == null) return new List<SemtBucakBelde>();
 
-        var dttCollection = _database.GetCollection<DistrictTownshipTown>("district_township_town");
-        return await dttCollection.Find(x => x.DistrictId == district.Id).ToListAsync();
+        var semtCollection = _database.GetCollection<SemtBucakBelde>("semt_bucak_belde");
+        return await semtCollection.Find(x => x.IlceId == ilceData.IlceId).ToListAsync();
     }
 
-    public async Task<List<Neighbourhood>> GetNeighbourhoodsByDistrictTownshipTownAsync(string cityName, string districtName, string districtTownshipTownName)
+    public async Task<List<Mahalle>> GetMahallelerBySemtAsync(string il, string ilce, string semt_bucak_belde)
     {
-        var dtt = await GetDistrictTownshipTownByNameAsync(cityName, districtName, districtTownshipTownName);
-        if (dtt == null) return new List<Neighbourhood>();
+        var semtData = await GetSemtByNameAsync(il, ilce, semt_bucak_belde);
+        if (semtData == null) return new List<Mahalle>();
 
-        var neighbourhoodCollection = _database.GetCollection<Neighbourhood>("neighbourhood");
-        return await neighbourhoodCollection.Find(x => x.DistrictTownshipTownId == dtt.Id).ToListAsync();
+        var mahalleCollection = _database.GetCollection<Mahalle>("mahalle");
+        return await mahalleCollection.Find(x => x.SemtBucakBeldeId == semtData.Id).ToListAsync();
     }
 
     // Private helper metodlar
-    private async Task<City?> GetCityByNameAsync(string cityName)
+    private async Task<Il?> GetIlByNameAsync(string il)
     {
-        var cityCollection = _database.GetCollection<City>("city");
-        return await cityCollection.Find(x => x.CityName == cityName).FirstOrDefaultAsync();
+        var ilCollection = _database.GetCollection<Il>("il");
+        return await ilCollection.Find(x => x.IlAdi == il).FirstOrDefaultAsync();
     }
 
-    private async Task<District?> GetDistrictByNameAsync(string cityName, string districtName)
+    private async Task<Ilce?> GetIlceByNameAsync(string il, string ilce)
     {
-        var city = await GetCityByNameAsync(cityName);
-        if (city == null) return null;
+        var ilData = await GetIlByNameAsync(il);
+        if (ilData == null) return null;
 
-        var districtCollection = _database.GetCollection<District>("district");
-        return await districtCollection.Find(x => x.DistrictName == districtName && x.CityId == city.Id).FirstOrDefaultAsync();
+        var ilceCollection = _database.GetCollection<Ilce>("ilce");
+        return await ilceCollection.Find(x => x.IlceAdi == ilce && x.IlId == ilData.IlId).FirstOrDefaultAsync();
     }
 
-    private async Task<DistrictTownshipTown?> GetDistrictTownshipTownByNameAsync(string cityName, string districtName, string districtTownshipTownName)
+    private async Task<SemtBucakBelde?> GetSemtByNameAsync(string il, string ilce, string semt_bucak_belde)
     {
-        var district = await GetDistrictByNameAsync(cityName, districtName);
-        if (district == null) return null;
+        var ilceData = await GetIlceByNameAsync(il, ilce);
+        if (ilceData == null) return null;
 
-        var dttCollection = _database.GetCollection<DistrictTownshipTown>("district_township_town");
-        return await dttCollection.Find(x => x.DistrictTownshipTownName == districtTownshipTownName && x.DistrictId == district.Id).FirstOrDefaultAsync();
+        var semtCollection = _database.GetCollection<SemtBucakBelde>("semt_bucak_belde");
+        return await semtCollection.Find(x => x.SemtBucakBeldeAdi == semt_bucak_belde && x.IlceId == ilceData.IlceId).FirstOrDefaultAsync();
     }
 
-    private async Task<Neighbourhood?> GetNeighbourhoodByNameAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName)
+    private async Task<Mahalle?> GetMahalleByNameAsync(string il, string ilce, string semt_bucak_belde, string mahalle)
     {
-        var dtt = await GetDistrictTownshipTownByNameAsync(cityName, districtName, districtTownshipTownName);
-        if (dtt == null) return null;
+        var semtData = await GetSemtByNameAsync(il, ilce, semt_bucak_belde);
+        if (semtData == null) return null;
 
-        var neighbourhoodCollection = _database.GetCollection<Neighbourhood>("neighbourhood");
-        return await neighbourhoodCollection.Find(x => x.NeighbourhoodName == neighbourhoodName && x.DistrictTownshipTownId == dtt.Id).FirstOrDefaultAsync();
+        var mahalleCollection = _database.GetCollection<Mahalle>("mahalle");
+        return await mahalleCollection.Find(x => x.MahalleAdi == mahalle && x.SemtBucakBeldeId == semtData.Id).FirstOrDefaultAsync();
     }
 
-    private async Task<int> GetNeighbourhoodIdByNameAsync(string cityName, string districtName, string districtTownshipTownName, string neighbourhoodName)
+    private async Task<int> GetMahalleIdByNameAsync(string il, string ilce, string semt_bucak_belde, string mahalle)
     {
-        var neighbourhood = await GetNeighbourhoodByNameAsync(cityName, districtName, districtTownshipTownName, neighbourhoodName);
-        return neighbourhood?.Id ?? 0;
+        var mahalleData = await GetMahalleByNameAsync(il, ilce, semt_bucak_belde, mahalle);
+        return mahalleData?.Id ?? 0;
     }
 }

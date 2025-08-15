@@ -3,15 +3,15 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace SurveyApp.Models;
 
-public class City
+public class Il
 {
     [BsonId]
-    [BsonRepresentation(BsonType.Int32)]
-    public int Id { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; } = string.Empty;
 
-    [BsonElement("city_name")]
-    public string CityName { get; set; } = string.Empty;
+    [BsonElement("id")]
+    public int IlId { get; set; }
 
-    [BsonElement("created_at")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [BsonElement("il")]
+    public string IlAdi { get; set; } = string.Empty;
 } 

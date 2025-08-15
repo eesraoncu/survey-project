@@ -25,9 +25,14 @@ public class JwtService : IJwtService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.UserEmail),
-            new Claim(ClaimTypes.Name, $"{user.UserName} {user.UserSurname}"),
-            new Claim(ClaimTypes.Role, GetRoleName(user.RoleId))
+            new Claim(ClaimTypes.Name, $"{user.UserName} {user.UserSurname}")
         };
+
+        // Kullanıcının tüm rollerini JWT token'a ekle
+        foreach (var role in user.Roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+        }
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -72,14 +77,5 @@ public class JwtService : IJwtService
         }
     }
 
-    private string GetRoleName(int roleId)
-    {
-        return roleId switch
-        {
-            1 => "Admin",
-            2 => "Owner",
-            3 => "User",
-            _ => "User"
-        };
-    }
+
 }

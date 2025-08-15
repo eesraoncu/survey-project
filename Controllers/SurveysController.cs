@@ -3,6 +3,7 @@ using SurveyApp.Application.DTO.Request;
 using SurveyApp.Application.DTO.Response;
 using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Models;
+using SurveyApp.Services;
 using AutoMapper;
 
 namespace SurveyApp.Controllers;
@@ -13,12 +14,14 @@ public sealed class SurveysController : ControllerBase
 {
     private readonly ISurveyRepository _surveyRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly IMapper _mapper;
 
-    public SurveysController(ISurveyRepository surveyRepository, IUserRepository userRepository, IMapper mapper)
+    public SurveysController(ISurveyRepository surveyRepository, IUserRepository userRepository, IUserService userService, IMapper mapper)
     {
         _surveyRepository = surveyRepository;
         _userRepository = userRepository;
+        _userService = userService;
         _mapper = mapper;
     }
 
@@ -50,12 +53,11 @@ public sealed class SurveysController : ControllerBase
         var entity = _mapper.Map<Survey>(request);
         var created = await _surveyRepository.CreateAsync(entity);
         
-        // Survey oluşturulduğunda kullanıcının rolünü owner yap
+        // Survey oluşturulduğunda kullanıcıya owner rolü ekle
         var user = await _userRepository.GetByIdAsync(request.UsersId);
         if (user != null && !user.IsAdmin) // Admin değilse owner yap
         {
-            user.SetAsOwner();
-            await _userRepository.UpdateAsync(user.Id, user);
+            await _userService.AddRoleToUserAsync(user.Id, "owner");
         }
         
         var response = _mapper.Map<SurveyResponse>(created);
@@ -85,12 +87,11 @@ public sealed class SurveysController : ControllerBase
         var survey = await _surveyRepository.GetByIdAsync(id);
         if (survey is null) return NotFound();
 
-        // Survey tamamlandığında kullanıcının rolünü user yap
+        // Survey tamamlandığında kullanıcıya user rolü ekle (eğer yoksa)
         var user = await _userRepository.GetByIdAsync(request.UserId);
         if (user != null && !user.IsAdmin) // Admin değilse user yap
         {
-            user.SetAsUser();
-            await _userRepository.UpdateAsync(user.Id, user);
+            await _userService.AddRoleToUserAsync(user.Id, "user");
         }
 
         survey.IsCompleted = true;

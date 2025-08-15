@@ -114,3 +114,13 @@ C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityMod
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Google.Apis.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Google.Apis.Auth.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Google.Apis.Core.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.Google.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\System.CodeDom.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\System.Management.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Management.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\RestSharp.dll
+C:\Users\musta\OneDrive\Desktop\SurveyApp\bin\Debug\net9.0\TrelloNet.dll

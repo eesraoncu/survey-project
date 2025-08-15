@@ -1,50 +1,90 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SurveyApp.Infrastructure.Repositories;
-using SurveyApp.Models;
+using SurveyApp.Services;
 
 namespace SurveyApp.Controllers;
 
 [ApiController]
-[Route("api/role")]
+[Route("api/[controller]")]
+[Authorize]
 public sealed class RoleController : ControllerBase
 {
-    private readonly IRoleRepository _roleRepository;
+    private readonly IUserService _userService;
 
-    public RoleController(IRoleRepository roleRepository)
+    public RoleController(IUserService userService)
     {
-        _roleRepository = roleRepository;
+        _userService = userService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<Role>>> GetAll()
+    [HttpPost("add-owner-role")]
+    public async Task<ActionResult> AddOwnerRole()
     {
-        var list = await _roleRepository.GetAllAsync();
-        return Ok(list);
+        try
+        {
+            // JWT token'dan kullanıcı ID'sini al
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "Geçersiz kullanıcı!" });
+            }
+
+            // Kullanıcıya Owner rolü ekle
+            var success = await _userService.AddRoleToUserAsync(userId, "owner");
+            
+            if (success)
+            {
+                return Ok(new { 
+                    success = true, 
+                    message = "Owner rolü başarıyla eklendi!",
+                    roles = new[] { "User", "Owner" }
+                });
+            }
+            else
+            {
+                return BadRequest(new { 
+                    success = false, 
+                    message = "Owner rolü eklenemedi!" 
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { 
+                success = false, 
+                message = "Rol ekleme işlemi başarısız!", 
+                error = ex.Message 
+            });
+        }
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Role>> GetById(int id)
+    [HttpPost("check-owner-role")]
+    public async Task<ActionResult> CheckOwnerRole()
     {
-        var entity = await _roleRepository.GetByIdAsync(id);
-        if (entity is null) return NotFound();
-        return Ok(entity);
+        try
+        {
+            // JWT token'dan kullanıcı ID'sini al
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "Geçersiz kullanıcı!" });
+            }
+
+            // Kullanıcının Owner rolü var mı kontrol et
+            var hasOwnerRole = await _userService.UserHasRoleAsync(userId, "owner");
+            
+            return Ok(new { 
+                success = true, 
+                hasOwnerRole = hasOwnerRole,
+                message = hasOwnerRole ? "Kullanıcının Owner rolü var!" : "Kullanıcının Owner rolü yok!"
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { 
+                success = false, 
+                message = "Rol kontrolü başarısız!", 
+                error = ex.Message 
+            });
+        }
     }
-
-    // Role oluşturma kaldırıldı - sadece manuel eklenebilir
-    // [HttpPost] - Kaldırıldı
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] Role role)
-    {
-        var existing = await _roleRepository.GetByIdAsync(id);
-        if (existing is null) return NotFound();
-        
-        // Sadece role_name güncellenebilir, ID değiştirilemez
-        existing.RoleName = role.RoleName;
-        var ok = await _roleRepository.UpdateAsync(id, existing);
-        return ok ? NoContent() : NotFound();
-    }
-
-    // Role silme kaldırıldı - sistem rolleri silinemez
-    // [HttpDelete] - Kaldırıldı
 }

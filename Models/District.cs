@@ -3,19 +3,18 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace SurveyApp.Models;
 
-public class District
+public class Ilce
 {
     [BsonId]
-    [BsonRepresentation(BsonType.Int32)]
-    public int Id { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; } = string.Empty;
 
-    [BsonElement("district_name")]
-    public string DistrictName { get; set; } = string.Empty;
+    [BsonElement("id")]
+    public int IlceId { get; set; }
 
-    [BsonElement("city_id")]
-    [BsonRepresentation(BsonType.Int32)]
-    public int CityId { get; set; } // Foreign Key
+    [BsonElement("ilce")]
+    public string IlceAdi { get; set; } = string.Empty;
 
-    [BsonElement("created_at")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [BsonElement("il_id")]
+    public int IlId { get; set; } // Foreign Key
 } 

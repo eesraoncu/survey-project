@@ -49,7 +49,8 @@ public sealed class MappingProfile : Profile
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.UserEmail, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore());
-        CreateMap<User, UserResponse>();
+        CreateMap<User, UserResponse>()
+            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.RoleName).ToList()));
     }
 }
 
