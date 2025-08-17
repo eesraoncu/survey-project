@@ -11,6 +11,7 @@ public sealed class SurveyResponse
     public int SurveyTypeId { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
+    public List<QuestionResponse> Questions { get; set; } = new List<QuestionResponse>();
 }
 
 public sealed class SurveyListItemResponse

@@ -15,13 +15,15 @@ public sealed class SurveysController : ControllerBase
     private readonly ISurveyRepository _surveyRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserService _userService;
+    private readonly IQuestionRepository _questionRepository;
     private readonly IMapper _mapper;
 
-    public SurveysController(ISurveyRepository surveyRepository, IUserRepository userRepository, IUserService userService, IMapper mapper)
+    public SurveysController(ISurveyRepository surveyRepository, IUserRepository userRepository, IUserService userService, IQuestionRepository questionRepository, IMapper mapper)
     {
         _surveyRepository = surveyRepository;
         _userRepository = userRepository;
         _userService = userService;
+        _questionRepository = questionRepository;
         _mapper = mapper;
     }
 
@@ -44,7 +46,14 @@ public sealed class SurveysController : ControllerBase
     {
         var entity = await _surveyRepository.GetByIdAsync(id);
         if (entity is null) return NotFound();
-        return Ok(_mapper.Map<SurveyResponse>(entity));
+        
+        var surveyResponse = _mapper.Map<SurveyResponse>(entity);
+        
+        // Anketin sorularını da getir
+        var questions = await _questionRepository.GetBySurveyIdAsync(id);
+        surveyResponse.Questions = _mapper.Map<List<QuestionResponse>>(questions);
+        
+        return Ok(surveyResponse);
     }
 
     [HttpPost]

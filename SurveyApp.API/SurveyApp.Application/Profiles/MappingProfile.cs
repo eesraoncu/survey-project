@@ -51,6 +51,27 @@ public sealed class MappingProfile : Profile
             .ForMember(d => d.CreatedAt, o => o.Ignore());
         CreateMap<User, UserResponse>()
             .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.RoleName).ToList()));
+
+        // Event
+        CreateMap<EventRequest, Event>();
+        CreateMap<EventUpdateRequest, Event>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore());
+        CreateMap<Event, EventResponse>();
+
+        // UserSettings
+        CreateMap<UserSettingsRequest, UserSettings>();
+        CreateMap<UserSettingsUpdateRequest, UserSettings>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore());
+        CreateMap<UserSettings, UserSettingsResponse>();
+
+        // UserProfile
+        CreateMap<UserProfileRequest, UserProfile>();
+        CreateMap<UserProfileUpdateRequest, UserProfile>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore());
+        CreateMap<UserProfile, UserProfileResponse>();
     }
 }
 

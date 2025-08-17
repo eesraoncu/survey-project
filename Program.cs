@@ -33,10 +33,16 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 // Google Auth Ayarları
 builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("GoogleAuth"));
 
+// Google AI Ayarları
+builder.Services.Configure<GoogleAISettings>(builder.Configuration.GetSection("GoogleAI"));
+
 // MongoDB DI kayıtları (IMongoClient, IMongoDatabase)
 var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
 if (mongoSettings is not null && !string.IsNullOrWhiteSpace(mongoSettings.ConnectionString))
 {
+    // MongoDB Settings'i DI container'a ekle
+    builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
+    
     builder.Services.AddSingleton<IMongoClient>(_ => 
     {
         var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
@@ -102,6 +108,13 @@ builder.Services.AddHttpClient("JiraClient", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// HttpClient'ı ekle (Google AI API için)
+builder.Services.AddHttpClient<IAIService, AIService>(client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "SurveyApp-AI/1.0");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
 // Service'leri kaydet
 builder.Services.AddScoped<IAdresService, AdresService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
@@ -110,6 +123,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ITrelloAuthService, TrelloAuthService>();
 builder.Services.AddScoped<IJiraAuthService, JiraAuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<MigrationService>();
 
 // Repository'leri kaydet
@@ -119,6 +136,9 @@ builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
 var app = builder.Build();
 
