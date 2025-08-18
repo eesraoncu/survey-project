@@ -43,12 +43,33 @@ public sealed class QuestionsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<QuestionResponse>> Create([FromBody] QuestionCreateRequest request)
+    public async Task<ActionResult<QuestionResponse>> Create([FromBody] QuestionCreateRequest request, [FromQuery] int? surveyId)
     {
+        var incomingText = string.IsNullOrWhiteSpace(request.QuestionsText) ? request.QuestionText : request.QuestionsText;
+        Console.WriteLine($"[QuestionsController.Create] Incoming => Text='{incomingText}', Type='{request.QuestionType}', SurveysId={request.SurveysId}, alt SurveyId={request.SurveyId}, query surveyId={surveyId}");
+
+        // SurveysId zorunlu: gövdeden gelmediyse query veya route üzerinden almayı dene
+        var effectiveSurveyId = request.SurveysId > 0 ? request.SurveysId : (request.SurveyId ?? surveyId ?? 0);
+        if (effectiveSurveyId <= 0)
+        {
+            return BadRequest(new { message = "SurveysId gerekli. Gövdede 'surveysId' ya da query'de 'surveyId' vermelisiniz." });
+        }
+
         var entity = _mapper.Map<Question>(request);
+        entity.SurveysId = effectiveSurveyId;
+        entity.QuestionsText = incomingText ?? string.Empty;
+
         var created = await _questionRepository.CreateAsync(entity);
         var response = _mapper.Map<QuestionResponse>(created);
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+    }
+
+    // Frontend kolaylığı: /api/Questions/by-survey/{surveyId} üzerinden POST ile soru ekleme
+    [HttpPost("by-survey/{surveyId}")]
+    public async Task<ActionResult<QuestionResponse>> CreateBySurvey(int surveyId, [FromBody] QuestionCreateRequest request)
+    {
+        request.SurveysId = surveyId;
+        return await Create(request, null);
     }
 
     [HttpPut("{id}")]

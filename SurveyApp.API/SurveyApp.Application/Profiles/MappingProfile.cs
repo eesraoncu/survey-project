@@ -14,11 +14,16 @@ public sealed class MappingProfile : Profile
         CreateMap<SurveyUpdateRequest, Survey>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore());
-        CreateMap<Survey, SurveyResponse>();
-        CreateMap<Survey, SurveyListItemResponse>();
+        CreateMap<Survey, SurveyResponse>()
+            .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
+        CreateMap<Survey, SurveyListItemResponse>()
+            .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
 
         // Question
-        CreateMap<QuestionCreateRequest, Question>();
+        CreateMap<QuestionCreateRequest, Question>()
+            // Frontend'den gelebilecek alternatif alan adlarını normalize et
+            .ForMember(d => d.QuestionsText, o => o.MapFrom(s => string.IsNullOrWhiteSpace(s.QuestionsText) ? (s.QuestionText ?? string.Empty) : s.QuestionsText))
+            .ForMember(d => d.SurveysId, o => o.MapFrom(s => s.SurveysId > 0 ? s.SurveysId : (s.SurveyId ?? 0)));
         CreateMap<QuestionUpdateRequest, Question>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.SurveysId, o => o.Ignore())

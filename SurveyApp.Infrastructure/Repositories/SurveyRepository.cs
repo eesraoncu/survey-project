@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
 using SurveyApp.Models;
 using SurveyApp.Services;
 
@@ -17,7 +18,9 @@ public class SurveyRepository : ISurveyRepository
 
     public async Task<List<Survey>> GetAllAsync()
     {
-        return await _surveys.Find(_ => true).ToListAsync();
+        // Sadece _id türü Int32 olan kayıtları getir (ObjectId olan eski kayıtlar deserialize hatası üretir)
+        var typeInt32Filter = (FilterDefinition<Survey>) new BsonDocument("_id", new BsonDocument("$type", 16));
+        return await _surveys.Find(typeInt32Filter).ToListAsync();
     }
 
     public async Task<Survey?> GetByIdAsync(int id)
@@ -27,8 +30,11 @@ public class SurveyRepository : ISurveyRepository
 
     public async Task<Survey> CreateAsync(Survey survey)
     {
-        // Otomatik ID ataması
-        survey.Id = await _autoIncrementService.GetNextIdAsync("surveys");
+        // Otomatik ID ataması (sadece set edilmemişse)
+        if (survey.Id == 0)
+        {
+            survey.Id = await _autoIncrementService.GetNextIdAsync("surveys");
+        }
         await _surveys.InsertOneAsync(survey);
         return survey;
     }
@@ -47,16 +53,22 @@ public class SurveyRepository : ISurveyRepository
 
     public async Task<List<Survey>> GetByUserIdAsync(int userId)
     {
-        return await _surveys.Find(s => s.UsersId == userId).ToListAsync();
+        var typeInt32Filter = (FilterDefinition<Survey>) new BsonDocument("_id", new BsonDocument("$type", 16));
+        var userFilter = Builders<Survey>.Filter.Eq(s => s.UsersId, userId);
+        return await _surveys.Find(Builders<Survey>.Filter.And(typeInt32Filter, userFilter)).ToListAsync();
     }
 
     public async Task<List<Survey>> GetBySurveyTypeIdAsync(int surveyTypeId)
     {
-        return await _surveys.Find(s => s.SurveyTypeId == surveyTypeId).ToListAsync();
+        var typeInt32Filter = (FilterDefinition<Survey>) new BsonDocument("_id", new BsonDocument("$type", 16));
+        var typeFilter = Builders<Survey>.Filter.Eq(s => s.SurveyTypeId, surveyTypeId);
+        return await _surveys.Find(Builders<Survey>.Filter.And(typeInt32Filter, typeFilter)).ToListAsync();
     }
 
     public async Task<List<Survey>> GetActiveSurveysAsync()
     {
-        return await _surveys.Find(s => s.IsActive).ToListAsync();
+        var typeInt32Filter = (FilterDefinition<Survey>) new BsonDocument("_id", new BsonDocument("$type", 16));
+        var activeFilter = Builders<Survey>.Filter.Eq(s => s.IsActive, true);
+        return await _surveys.Find(Builders<Survey>.Filter.And(typeInt32Filter, activeFilter)).ToListAsync();
     }
 } 

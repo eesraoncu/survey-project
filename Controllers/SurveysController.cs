@@ -28,6 +28,7 @@ public sealed class SurveysController : ControllerBase
     }
 
     [HttpGet]
+    [HttpGet("get-all")]
     public async Task<ActionResult<List<SurveyListItemResponse>>> GetAll()
     {
         var list = await _surveyRepository.GetAllAsync();
@@ -53,6 +54,21 @@ public sealed class SurveysController : ControllerBase
         var questions = await _questionRepository.GetBySurveyIdAsync(id);
         surveyResponse.Questions = _mapper.Map<List<QuestionResponse>>(questions);
         
+        return Ok(surveyResponse);
+    }
+
+    // Frontend uyumluluğu: /api/Surveys/stats/{id} bekleyen çağrılar için
+    [HttpGet("stats/{id}")]
+    public async Task<ActionResult<SurveyResponse>> GetStats(int id)
+    {
+        var entity = await _surveyRepository.GetByIdAsync(id);
+        if (entity is null) return NotFound();
+
+        var surveyResponse = _mapper.Map<SurveyResponse>(entity);
+
+        var questions = await _questionRepository.GetBySurveyIdAsync(id);
+        surveyResponse.Questions = _mapper.Map<List<QuestionResponse>>(questions);
+
         return Ok(surveyResponse);
     }
 

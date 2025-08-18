@@ -4,7 +4,7 @@ namespace SurveyApp.Application.DTO.Response;
 
 public sealed class SurveyResponse
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string SurveyName { get; set; } = string.Empty;
     public string SurveyDescription { get; set; } = string.Empty;
     public int UsersId { get; set; }
@@ -16,7 +16,7 @@ public sealed class SurveyResponse
 
 public sealed class SurveyListItemResponse
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string SurveyName { get; set; } = string.Empty;
     public string SurveyDescription { get; set; } = string.Empty;
     public int SurveyTypeId { get; set; }

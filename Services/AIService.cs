@@ -372,11 +372,9 @@ public class AIService : IAIService
             var surveyData = ParseSurveyGenerationResponse(aiResponse);
             Console.WriteLine($"Parsed Survey Data: Title={surveyData.SurveyTitle}, Questions Count={surveyData.Questions.Count}");
 
-            // Survey oluştur
-            var surveyId = await _autoIncrementService.GetNextIdAsync("surveys");
+            // Survey oluştur (ID ataması repository tarafından yapılacak)
             var survey = new Survey
             {
-                Id = surveyId,
                 SurveyName = surveyData.SurveyTitle,
                 SurveyDescription = surveyData.SurveyDescription,
                 UsersId = userId,
