@@ -17,7 +17,8 @@ public sealed class MappingProfile : Profile
         CreateMap<Survey, SurveyResponse>()
             .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
         CreateMap<Survey, SurveyListItemResponse>()
-            .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
+            .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()))
+            .ForMember(d => d.UsersId, o => o.MapFrom(s => s.UsersId));
 
         // Question
         CreateMap<QuestionCreateRequest, Question>()

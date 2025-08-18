@@ -29,9 +29,28 @@ public sealed class SurveysController : ControllerBase
 
     [HttpGet]
     [HttpGet("get-all")]
-    public async Task<ActionResult<List<SurveyListItemResponse>>> GetAll()
+    public async Task<ActionResult<List<SurveyListItemResponse>>> GetAll([FromQuery] int? usersId, [FromQuery] int? users_id, [FromQuery] int? userId)
     {
-        var list = await _surveyRepository.GetAllAsync();
+        var filterUserId = usersId ?? users_id ?? userId;
+        List<Survey> list;
+        if (filterUserId.HasValue && filterUserId.Value > 0)
+        {
+            list = await _surveyRepository.GetByUserIdAsync(filterUserId.Value);
+        }
+        else
+        {
+            list = await _surveyRepository.GetAllAsync();
+        }
+        var mapped = _mapper.Map<List<SurveyListItemResponse>>(list);
+        return Ok(mapped);
+    }
+
+    // Kullanıcıya göre anketler
+    [HttpGet("get-by-user/{userId}")]
+    [HttpGet("by-user/{userId}")]
+    public async Task<ActionResult<List<SurveyListItemResponse>>> GetByUser(int userId)
+    {
+        var list = await _surveyRepository.GetByUserIdAsync(userId);
         return Ok(_mapper.Map<List<SurveyListItemResponse>>(list));
     }
 
