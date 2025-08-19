@@ -13,4 +13,9 @@ public interface IUserService
     Task<bool> RemoveRoleFromUserAsync(int userId, string roleName);
     Task<bool> UserHasRoleAsync(int userId, string roleName);
     Task<bool> UserHasRoleAsync(int userId, int roleId);
+    
+    // Anket role yönetimi
+    Task<bool> MakeUserOwnerForSurveyAsync(int userId, int surveyId);
+    Task<bool> EnsureUserRoleForAnsweringAsync(int userId, int surveyId);
+    Task<bool> IsUserOwnerOfSurveyAsync(int userId, int surveyCreatorId);
 }

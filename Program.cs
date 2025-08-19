@@ -128,10 +128,13 @@ builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<MigrationService>();
+builder.Services.AddSingleton<IRsaCryptoService, RsaCryptoService>();
 
 // Repository'leri kaydet
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
+builder.Services.AddScoped<IQuestionTypeRepository, QuestionTypeRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
 builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
@@ -158,18 +161,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Migration'ı çalıştır (sadece bir kez)
-if (app.Environment.IsDevelopment())
-{
-    try
-    {
-        var migrationService = app.Services.GetRequiredService<MigrationService>();
-        await migrationService.MigrateUsersToNewRoleSystem();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Migration hatası: {ex.Message}");
-    }
-}
+// Migration'ı çalıştır (sadece bir kez) - şimdilik kapalı
+// if (app.Environment.IsDevelopment())
+// {
+//     try
+//     {
+//         using (var scope = app.Services.CreateScope())
+//         {
+//             var migrationService = scope.ServiceProvider.GetRequiredService<MigrationService>();
+//             await migrationService.MigrateUsersToNewRoleSystem();
+//         }
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"Migration hatası: {ex.Message}");
+//     }
+// }
 
 app.Run(); 

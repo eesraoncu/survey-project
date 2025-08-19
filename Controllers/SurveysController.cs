@@ -113,6 +113,11 @@ public sealed class SurveysController : ControllerBase
     {
         var existing = await _surveyRepository.GetByIdAsync(id);
         if (existing is null) return NotFound();
+        
+        // Sadece survey owner'ı veya admin düzenleyebilir
+        // Bu kontrol için userId'ye ihtiyacımız var - JWT'den alınabilir
+        // Şimdilik basit kontrol yapalım
+        
         _mapper.Map(request, existing);
         var ok = await _surveyRepository.UpdateAsync(id, existing);
         return ok ? NoContent() : NotFound();

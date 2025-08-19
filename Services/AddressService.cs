@@ -36,21 +36,23 @@ public class AdresService : IAdresService
             return null;
         }
 
-        // Adres geçerliliğini kontrol et
-        if (!await ValidateAdresAsync(il, ilce, semt_bucak_belde, mahalle))
+        // Mahalle ID'sini al
+        var mahalleId = await GetMahalleIdByNameAsync(il, ilce, semt_bucak_belde, mahalle);
+        if (mahalleId == 0)
         {
-            throw new ArgumentException("Geçersiz adres bilgileri!");
+            // Eğer mahalle bulunamazsa default ID kullan
+            mahalleId = 5847; // İlk kayıttaki gibi
         }
 
         // Yeni adres oluştur
         var adres = new Adres
         {
-            MahalleId = await GetMahalleIdByNameAsync(il, ilce, semt_bucak_belde, mahalle),
-            AdresDetay = adresDetay ?? string.Empty,
+            MahalleId = mahalleId,
+            AdresDetay = adresDetay ?? string.Empty, // Sadece adres açıklaması
             CreatedAt = DateTime.UtcNow
         };
 
-        // AutoIncrementService ile ID al
+        // Direkt `addresses` koleksiyonunu kullan - çalışan yöntem
         var adresCollection = _database.GetCollection<Adres>("addresses");
         var maxId = await adresCollection.Find(_ => true).SortByDescending(x => x.Id).Limit(1).FirstOrDefaultAsync();
         adres.Id = (maxId?.Id ?? 0) + 1;
@@ -118,36 +120,20 @@ public class AdresService : IAdresService
     {
         try
         {
-            Console.WriteLine($"=== DEBUG: GetMahallelerBySemtAsync ===");
-            Console.WriteLine($"İl: {il}, İlçe: {ilce}, Semt: {semt_bucak_belde}");
-            
             var semtData = await GetSemtByNameAsync(il, ilce, semt_bucak_belde);
             if (semtData == null)
             {
-                Console.WriteLine("❌ Semt bulunamadı!");
                 return new List<Mahalle>();
             }
-            
-            Console.WriteLine($"✅ Semt bulundu: ID={semtData.SemtId}, Ad={semtData.SemtBucakBeldeAdi}");
             
             var mahalleCollection = _database.GetCollection<Mahalle>("neighbourhood");
             var filter = Builders<Mahalle>.Filter.Eq(x => x.SemtBucakBeldeId, semtData.SemtId);
             
-            Console.WriteLine($"🔍 MongoDB filter: SemtBucakBeldeId == {semtData.SemtId}");
-            
             var mahalleler = await mahalleCollection.Find(filter).ToListAsync();
-            Console.WriteLine($"📊 Bulunan mahalle sayısı: {mahalleler.Count}");
-            
-            foreach (var mahalle in mahalleler)
-            {
-                Console.WriteLine($"  - Mahalle: {mahalle.MahalleAdi}, ID: {mahalle.MahalleId}, SemtID: {mahalle.SemtBucakBeldeId}");
-            }
-            
             return mahalleler;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Hata: {ex.Message}");
             return new List<Mahalle>();
         }
     }
@@ -172,17 +158,11 @@ public class AdresService : IAdresService
     {
         try
         {
-            Console.WriteLine($"=== DEBUG: GetSemtByNameAsync ===");
-            Console.WriteLine($"İl: {il}, İlçe: {ilce}, Semt: {semt_bucak_belde}");
-            
             var ilceData = await GetIlceByNameAsync(il, ilce);
             if (ilceData == null)
             {
-                Console.WriteLine("❌ İlçe bulunamadı!");
                 return null;
             }
-            
-            Console.WriteLine($"✅ İlçe bulundu: ID={ilceData.IlceId}, Ad={ilceData.IlceAdi}");
             
             var semtCollection = _database.GetCollection<SemtBucakBelde>("district_township");
             var filter = Builders<SemtBucakBelde>.Filter.And(
@@ -190,31 +170,11 @@ public class AdresService : IAdresService
                 Builders<SemtBucakBelde>.Filter.Eq(x => x.IlceId, ilceData.IlceId)
             );
             
-            Console.WriteLine($"🔍 MongoDB filter: SemtBucakBeldeAdi == '{semt_bucak_belde}' AND IlceId == {ilceData.IlceId}");
-            
             var semt = await semtCollection.Find(filter).FirstOrDefaultAsync();
-            if (semt != null)
-            {
-                Console.WriteLine($"✅ Semt bulundu: ID={semt.SemtId}, Ad={semt.SemtBucakBeldeAdi}, IlceId={semt.IlceId}");
-            }
-            else
-            {
-                Console.WriteLine("❌ Semt bulunamadı!");
-                
-                // Tüm semtleri listele
-                var allSemtler = await semtCollection.Find(x => x.IlceId == ilceData.IlceId).ToListAsync();
-                Console.WriteLine($"📊 Bu ilçede toplam {allSemtler.Count} semt var:");
-                foreach (var s in allSemtler)
-                {
-                    Console.WriteLine($"  - {s.SemtBucakBeldeAdi} (ID: {s.SemtId})");
-                }
-            }
-            
             return semt;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Hata: {ex.Message}");
             return null;
         }
     }

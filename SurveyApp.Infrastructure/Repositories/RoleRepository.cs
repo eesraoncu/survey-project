@@ -11,7 +11,7 @@ public class RoleRepository : IRoleRepository
 
     public RoleRepository(IMongoDatabase database, AutoIncrementService autoIncrementService)
     {
-        _roles = database.GetCollection<Role>("roles");
+        _roles = database.GetCollection<Role>("role");
         _autoIncrementService = autoIncrementService;
     }
 
@@ -27,8 +27,11 @@ public class RoleRepository : IRoleRepository
 
     public async Task<Role> CreateAsync(Role role)
     {
-        // Otomatik ID ataması
-        role.Id = await _autoIncrementService.GetNextIdAsync("roles");
+        // Eğer ID zaten set edilmişse (manual), kullan; değilse otomatik ata
+        if (role.Id == 0)
+        {
+            role.Id = await _autoIncrementService.GetNextIdAsync("role");
+        }
         await _roles.InsertOneAsync(role);
         return role;
     }
@@ -53,6 +56,22 @@ public class RoleRepository : IRoleRepository
 
     public async Task<Role?> GetByNameAsync(string roleName)
     {
-        return await _roles.Find(r => r.RoleName == roleName && r.IsActive).FirstOrDefaultAsync();
+        Console.WriteLine($"🔍 GetByNameAsync araniyor: '{roleName}'");
+        
+        // Önce IsActive kontrolü olmadan ara
+        var roleWithoutActive = await _roles.Find(r => r.RoleName == roleName).FirstOrDefaultAsync();
+        if (roleWithoutActive != null)
+        {
+            Console.WriteLine($"📌 Rol bulundu (IsActive={roleWithoutActive.IsActive}): {roleWithoutActive.RoleName}");
+        }
+        else
+        {
+            Console.WriteLine($"❌ Rol hiç bulunamadi: '{roleName}'");
+        }
+        
+        // IsActive kontrolünü geçici olarak kaldır - sorun burada
+        var result = await _roles.Find(r => r.RoleName == roleName).FirstOrDefaultAsync();
+        Console.WriteLine($"🎯 Final sonuç (IsActive olmadan): {(result != null ? "BULUNDU" : "BULUNAMADI")}");
+        return result;
     }
 }

@@ -32,22 +32,33 @@ public sealed class MappingProfile : Profile
         CreateMap<Question, QuestionResponse>();
 
         // Choice
-        CreateMap<ChoiceCreateRequest, Choice>();
+        CreateMap<ChoiceCreateRequest, Choice>()
+            .ForMember(d => d.QuestionsId, o => o.MapFrom(s => s.QuestionsId > 0 ? s.QuestionsId : (s.QuestionId ?? 0)));
         CreateMap<ChoiceUpdateRequest, Choice>()
             .ForMember(d => d.Id, o => o.Ignore())
-            .ForMember(d => d.QuestionsId, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore());
         CreateMap<Choice, ChoiceResponse>();
 
         // Answer
-        CreateMap<AnswerCreateRequest, Answer>();
+        CreateMap<AnswerCreateRequest, Answer>()
+            .ForMember(d => d.QuestionsId, o => o.MapFrom(s => s.QuestionsId > 0 ? s.QuestionsId : (s.QuestionId ?? 0)))
+            .ForMember(d => d.UsersId, o => o.MapFrom(s => s.UsersId > 0 ? s.UsersId : (s.UserId ?? 0)))
+            .ForMember(d => d.SurveysId, o => o.MapFrom(s => s.SurveysId > 0 ? s.SurveysId : (s.SurveyId ?? 0)));
         CreateMap<AnswerUpdateRequest, Answer>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.QuestionsId, o => o.Ignore())
             .ForMember(d => d.UsersId, o => o.Ignore())
             .ForMember(d => d.SurveysId, o => o.Ignore())
-            .ForMember(d => d.CreatedAt, o => o.Ignore());
+            .ForMember(d => d.CreatedAt, o => o.Ignore())
+            .ForMember(d => d.UpdatedAt, o => o.Ignore());
         CreateMap<Answer, AnswerResponse>();
+
+        // QuestionType
+        CreateMap<QuestionTypeCreateRequest, QuestionType>();
+        CreateMap<QuestionTypeUpdateRequest, QuestionType>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore());
+        CreateMap<QuestionType, QuestionTypeResponse>();
 
         // User
         CreateMap<UserRegisterRequest, User>();

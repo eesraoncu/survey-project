@@ -21,6 +21,7 @@ public sealed class AuthController : ControllerBase
     private readonly IJiraAuthService _jiraAuthService;
     private readonly IJwtService _jwtService;
     private readonly IMapper _mapper;
+    private readonly IRsaCryptoService _rsaCryptoService;
 
     public AuthController(
         IUserRepository userRepository,
@@ -31,7 +32,8 @@ public sealed class AuthController : ControllerBase
         ITrelloAuthService trelloAuthService,
         IJiraAuthService jiraAuthService,
         IJwtService jwtService,
-        IMapper mapper)
+        IMapper mapper,
+        IRsaCryptoService rsaCryptoService)
     {
         _userRepository = userRepository;
         _userService = userService;
@@ -42,9 +44,19 @@ public sealed class AuthController : ControllerBase
         _jiraAuthService = jiraAuthService;
         _jwtService = jwtService;
         _mapper = mapper;
+        _rsaCryptoService = rsaCryptoService;
+    }
+
+    [HttpGet("login-public-key")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public ActionResult<object> GetLoginPublicKey()
+    {
+        var pem = _rsaCryptoService.GetPublicKeyPem();
+        return Ok(new { publicKeyPem = pem });
     }
 
     [HttpPost("register")]
+    [Consumes("application/json")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] UserRegisterRequest request)
     {
         try
@@ -58,18 +70,34 @@ public sealed class AuthController : ControllerBase
 
             // Adres oluştur (opsiyonel)
             Adres? adres = null;
-            if (!string.IsNullOrWhiteSpace(request.Il) && 
-                !string.IsNullOrWhiteSpace(request.Ilce) && 
-                !string.IsNullOrWhiteSpace(request.SemtBucakBelde) && 
-                !string.IsNullOrWhiteSpace(request.Mahalle))
+            
+            // Frontend'den gelen yeni format veya eski format kullan
+            var cityName = request.CityName ?? request.Il;
+            var districtName = request.DistrictName ?? request.Ilce;  
+            var districtTownshipTownName = request.DistrictTownshipTownName ?? request.SemtBucakBelde;
+            var neighbourhoodName = request.NeighbourhoodName ?? request.Mahalle;
+            var addressDetails = request.AddressDetails ?? request.AdresDetay;
+            
+            if (!string.IsNullOrWhiteSpace(cityName) && 
+                !string.IsNullOrWhiteSpace(districtName) && 
+                !string.IsNullOrWhiteSpace(districtTownshipTownName) && 
+                !string.IsNullOrWhiteSpace(neighbourhoodName))
             {
-                adres = await _adresService.CreateAdresAsync(
-                    request.Il,
-                    request.Ilce,
-                    request.SemtBucakBelde,
-                    request.Mahalle,
-                    request.AdresDetay
-                );
+                try
+                {
+                    adres = await _adresService.CreateAdresAsync(
+                        cityName,
+                        districtName,
+                        districtTownshipTownName,
+                        neighbourhoodName,
+                        addressDetails
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Adres oluşturulamazsa null bırak, kullanıcı kayıt işlemini durdurmayın
+                    adres = null;
+                }
             }
 
             var entity = _mapper.Map<User>(request);
@@ -77,8 +105,18 @@ public sealed class AuthController : ControllerBase
             // Adres ID'sini set et (eğer adres oluşturulduysa)
             entity.AddressId = adres?.Id;
             
-            // Şifre hashleme işlemi
-            entity.UserPassword = _passwordService.HashPassword(request.UserPassword);
+            // UserAddress alanını boş bırak çünkü AddressId kullanıyoruz
+            entity.UserAddress = string.Empty;
+            
+            // Şifre hashleme işlemi - frontend'den hash'lenmiş geliyorsa direkt kullan
+            if (request.UserPassword?.Length == 44) // Base64 SHA-256 hash
+            {
+                entity.UserPassword = request.UserPassword;
+            }
+            else
+            {
+                entity.UserPassword = _passwordService.HashPassword(request.UserPassword);
+            }
             
             var created = await _userRepository.CreateAsync(entity);
             
@@ -129,16 +167,44 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login([FromBody] UserLoginRequest request)
+    public async Task<ActionResult<AuthResponse>> Login([FromForm] string userEmail, [FromForm] string userPassword)
     {
         try
         {
+            Console.WriteLine($"=== LOGIN ATTEMPT ===");
+            Console.WriteLine($"Email: {userEmail}");
+            Console.WriteLine($"Password length: {userPassword?.Length ?? 0}");
+            
+            string providedPassword = userPassword;
+            Console.WriteLine($"Final password length: {providedPassword?.Length ?? 0}");
+            
             // Email ile kullanıcıyı rollerle birlikte bul
-            var user = await _userService.GetUserWithRolesByEmailAsync(request.UserEmail);
+            var user = await _userService.GetUserWithRolesByEmailAsync(userEmail);
+            Console.WriteLine($"User found: {user != null}");
+            if (user != null)
+            {
+                Console.WriteLine($"User email: {user.UserEmail}");
+                Console.WriteLine($"User active: {user.IsActive}");
+                Console.WriteLine($"Stored password hash length: {user.UserPassword?.Length ?? 0}");
+            }
             
             // Kullanıcı bulunamadıysa veya şifre yanlışsa
-            if (user == null || !_passwordService.VerifyPassword(request.UserPassword, user.UserPassword))
+            if (user == null)
             {
+                Console.WriteLine($"LOGIN FAILED: User not found");
+                return Unauthorized(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Email veya şifre hatalı!"
+                });
+            }
+            
+            var passwordVerified = _passwordService.VerifyPassword(providedPassword, user.UserPassword);
+            Console.WriteLine($"Password verification result: {passwordVerified}");
+            
+            if (!passwordVerified)
+            {
+                Console.WriteLine($"LOGIN FAILED: Password verification failed");
                 return Unauthorized(new AuthResponse
                 {
                     Success = false,
