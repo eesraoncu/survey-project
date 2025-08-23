@@ -36,6 +36,9 @@ public sealed class SurveyCreateRequest
     
     public bool EnablesFullName { get; set; } = false;
     public string NameFormat { get; set; } = "first_last";
+    
+    // Arka plan resmi
+    public string? SurveyBackgroundImage { get; set; } = null;
 }
 
 public sealed class SurveyUpdateRequest
@@ -72,6 +75,9 @@ public sealed class SurveyUpdateRequest
     
     public bool EnablesFullName { get; set; } = false;
     public string NameFormat { get; set; } = "first_last";
+    
+    // Arka plan resmi
+    public string? SurveyBackgroundImage { get; set; } = null;
 }
 
 public sealed class SurveyCompletionRequest

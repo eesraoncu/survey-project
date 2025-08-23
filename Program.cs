@@ -16,6 +16,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
+// Form options konfigürasyonu (dosya yükleme için)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+    options.ValueLengthLimit = int.MaxValue;
+    options.MemoryBufferThreshold = int.MaxValue;
+});
+
 // CORS ayarlarını ekle
 builder.Services.AddCors(options =>
 {
@@ -153,6 +161,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Static files konfigürasyonu (uploads klasörü için)
+app.UseStaticFiles();
 
 // CORS middleware'ini ekle (UseAuthentication'dan önce)
 app.UseCors("AllowAll");

@@ -11,6 +11,7 @@ public sealed class SurveyResponse
     public int SurveyTypeId { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
+    public string? SurveyBackgroundImage { get; set; } = null;
     public List<QuestionResponse> Questions { get; set; } = new List<QuestionResponse>();
 }
 
@@ -23,6 +24,7 @@ public sealed class SurveyListItemResponse
     public int SurveyTypeId { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
+    public string? SurveyBackgroundImage { get; set; } = null;
 }
 
 

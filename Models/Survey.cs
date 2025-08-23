@@ -95,4 +95,8 @@ public class Survey
 
     [BsonElement("name_format")]
     public string NameFormat { get; set; } = "first_last"; // "first_last", "last_first", "single_field"
+
+    // Arka plan resmi özelliği
+    [BsonElement("survey_background_image")]
+    public string? SurveyBackgroundImage { get; set; } = null; // Arka plan resmi URL'i
 } 
