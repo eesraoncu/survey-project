@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Log Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .log-entry {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .log-entry .timestamp {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .log-entry .activity-type {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .log-entry .description {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Activity Log Test Sayfası</h1>
+    
+    <div class="container">
+        <div class="section">
+            <h3>🔍 Log Sorgulama</h3>
+            <div class="form-group">
+                <label>Log Tipi:</label>
+                <select id="logType">
+                    <option value="">Tümü</option>
+                    <option value="login_success">Başarılı Giriş</option>
+                    <option value="login_failed">Başarısız Giriş</option>
+                    <option value="survey_created">Anket Oluşturuldu</option>
+                    <option value="survey_creation_failed">Anket Oluşturma Hatası</option>
+                    <option value="survey_updated">Anket Güncellendi</option>
+                    <option value="survey_update_failed">Anket Güncelleme Hatası</option>
+                    <option value="survey_deleted">Anket Silindi</option>
+                    <option value="survey_delete_failed">Anket Silme Hatası</option>
+                    <option value="survey_completed">Anket Tamamlandı</option>
+                    <option value="survey_completion_failed">Anket Tamamlama Hatası</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kullanıcı ID:</label>
+                <input type="number" id="userId" placeholder="Kullanıcı ID (opsiyonel)">
+            </div>
+            <div class="form-group">
+                <label>Başlangıç Tarihi:</label>
+                <input type="datetime-local" id="startDate">
+            </div>
+            <div class="form-group">
+                <label>Bitiş Tarihi:</label>
+                <input type="datetime-local" id="endDate">
+            </div>
+            <button onclick="getLogs()">Logları Getir</button>
+            <button onclick="getRecentLogs()">Son Logları Getir</button>
+            <button onclick="getLogCount()">Log Sayısını Getir</button>
+        </div>
+
+        <div class="section">
+            <h3>📊 Log İstatistikleri</h3>
+            <button onclick="getLogsByType('login_success')">Başarılı Girişler</button>
+            <button onclick="getLogsByType('login_failed')">Başarısız Girişler</button>
+            <button onclick="getLogsByType('survey_created')">Oluşturulan Anketler</button>
+            <button onclick="getLogsByType('survey_updated')">Güncellenen Anketler</button>
+            <button onclick="getLogsByType('survey_deleted')">Silinen Anketler</button>
+            <button onclick="getLogsByType('survey_completed')">Tamamlanan Anketler</button>
+            <button onclick="getUserLogs()">Kullanıcı Logları</button>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test İşlemleri</h3>
+            <p>Bu işlemler gerçek log kayıtları oluşturacak:</p>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testSurveyCreation()">Test Anket Oluşturma</button>
+            <button onclick="testSurveyUpdate()">Test Anket Güncelleme</button>
+            <button onclick="testSurveyDelete()">Test Anket Silme</button>
+            <button onclick="testSurveyCompletion()">Test Anket Tamamlama</button>
+        </div>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function getLogs() {
+            try {
+                const logType = document.getElementById('logType').value;
+                const userId = document.getElementById('userId').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                let url = `${API_BASE_URL}/api/ActivityLog`;
+                const params = new URLSearchParams();
+
+                if (logType) {
+                    params.append('activityType', logType);
+                }
+                if (userId) {
+                    params.append('userId', userId);
+                }
+                if (startDate) {
+                    params.append('startDate', startDate);
+                }
+                if (endDate) {
+                    params.append('endDate', endDate);
+                }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayLogs(data.activities || data);
+                } else {
+                    showResult(`Hata: ${data.message || 'Bilinmeyen hata'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        async function getRecentLogs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ActivityLog`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayLogs(data.activities || data);
+                } else {
+                    showResult(`Hata: ${data.message || 'Bilinmeyen hata'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        async function getLogCount() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ActivityLog/count`);
+                const count = await response.json();
+
+                if (response.ok) {
+                    showResult(`Toplam Log Sayısı: ${count}`, 'success');
+                } else {
+                    showResult(`Hata: Log sayısı alınamadı`, 'error');
+                }
+            } catch (error) {
+                showResult(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        async function getLogsByType(activityType) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ActivityLog/type/${activityType}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayLogs(data);
+                } else {
+                    showResult(`Hata: ${data.message || 'Bilinmeyen hata'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        async function getUserLogs() {
+            try {
+                const userId = document.getElementById('userId').value || '1';
+                const response = await fetch(`${API_BASE_URL}/api/ActivityLog/user/${userId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayLogs(data);
+                } else {
+                    showResult(`Hata: ${data.message || 'Bilinmeyen hata'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        function displayLogs(logs) {
+            if (!Array.isArray(logs) || logs.length === 0) {
+                showResult('Log bulunamadı', 'info');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            let html = `<h3>📋 Bulunan Loglar (${logs.length} adet)</h3>`;
+
+            logs.forEach(log => {
+                const timestamp = new Date(log.createdAt).toLocaleString('tr-TR');
+                const statusIcon = log.isSuccessful ? '✅' : '❌';
+                
+                html += `
+                    <div class="log-entry">
+                        <div class="timestamp">${timestamp}</div>
+                        <div class="activity-type">${statusIcon} ${log.activityType}</div>
+                        <div class="description">${log.description}</div>
+                        <div>Kullanıcı ID: ${log.userId}</div>
+                        ${log.ipAddress ? `<div>IP: ${log.ipAddress}</div>` : ''}
+                        ${log.resourceId ? `<div>Kaynak ID: ${log.resourceId} (${log.resourceType})</div>` : ''}
+                        ${log.errorMessage ? `<div style="color: red;">Hata: ${log.errorMessage}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            resultDiv.innerHTML = html;
+        }
+
+        async function testLogin() {
+            try {
+                showResult('Test login işlemi başlatılıyor...', 'info');
+                
+                const formData = new FormData();
+                formData.append('userEmail', 'test@example.com');
+                formData.append('userPassword', 'wrongpassword');
+
+                const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    showResult('Test login başarılı (bu beklenmeyen bir durum)', 'success');
+                } else {
+                    showResult('Test login başarısız (beklenen durum) - Log kaydı oluşturuldu', 'info');
+                }
+            } catch (error) {
+                showResult(`Test login hatası: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSurveyCreation() {
+            try {
+                showResult('Test anket oluşturma işlemi başlatılıyor...', 'info');
+                
+                const surveyData = {
+                    surveyName: 'Test Anketi',
+                    surveyDescription: 'Bu bir test anketidir',
+                    usersId: 1,
+                    surveyTypeId: 1
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/Surveys`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(surveyData)
+                });
+
+                if (response.ok) {
+                    showResult('Test anket oluşturma başarılı - Log kaydı oluşturuldu', 'success');
+                } else {
+                    const errorData = await response.json();
+                    showResult(`Test anket oluşturma başarısız: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Test anket oluşturma hatası: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSurveyUpdate() {
+            try {
+                showResult('Test anket güncelleme işlemi başlatılıyor...', 'info');
+                
+                const surveyData = {
+                    surveyName: 'Güncellenmiş Test Anketi',
+                    surveyDescription: 'Bu güncellenmiş bir test anketidir',
+                    usersId: 1,
+                    surveyTypeId: 1
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/Surveys/1`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(surveyData)
+                });
+
+                if (response.ok) {
+                    showResult('Test anket güncelleme başarılı - Log kaydı oluşturuldu', 'success');
+                } else {
+                    showResult(`Test anket güncelleme başarısız: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Test anket güncelleme hatası: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSurveyDelete() {
+            try {
+                showResult('Test anket silme işlemi başlatılıyor...', 'info');
+                
+                const deleteData = {
+                    usersId: 1,
+                    reason: 'Test amaçlı silme'
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/Surveys/1`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deleteData)
+                });
+
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    showResult(`Test anket silme başarılı - Log kaydı oluşturuldu
+                    
+📋 Silme Detayları:
+- Anket ID: ${responseData.deletedSurveyId}
+- Anket Adı: ${responseData.deletedSurveyName}
+- Silen Kullanıcı ID: ${responseData.deletedByUserId}
+- Silen Kullanıcı Email: ${responseData.deletedByUserEmail}
+- Silme Nedeni: ${responseData.deleteReason}
+- Silme Tarihi: ${new Date(responseData.deletedAt).toLocaleString('tr-TR')}`, 'success');
+                } else {
+                    showResult(`Test anket silme başarısız: ${response.status}
+                    
+📋 Hata Detayları:
+- Mesaj: ${responseData.message}
+- Anket ID: ${responseData.deletedSurveyId}
+- Kullanıcı ID: ${responseData.deletedByUserId}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Test anket silme hatası: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSurveyCompletion() {
+            try {
+                showResult('Test anket tamamlama işlemi başlatılıyor...', 'info');
+                
+                const completionData = {
+                    userId: 1
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/Surveys/1/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(completionData)
+                });
+
+                if (response.ok) {
+                    showResult('Test anket tamamlama başarılı - Log kaydı oluşturuldu', 'success');
+                } else {
+                    showResult(`Test anket tamamlama başarısız: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Test anket tamamlama hatası: ${error.message}`, 'error');
+            }
+        }
+
+        // Sayfa yüklendiğinde son logları getir
+        window.onload = function() {
+            getRecentLogs();
+        };
+    </script>
+</body>
+</html>

@@ -89,6 +89,9 @@ public sealed class MappingProfile : Profile
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore());
         CreateMap<UserProfile, UserProfileResponse>();
+
+        // ActivityLog
+        CreateMap<ActivityLog, ActivityLogResponse>();
     }
 }
 

@@ -22,6 +22,7 @@ public sealed class AuthController : ControllerBase
     private readonly IJwtService _jwtService;
     private readonly IMapper _mapper;
     private readonly IRsaCryptoService _rsaCryptoService;
+    private readonly IActivityLogService _activityLogService;
 
     public AuthController(
         IUserRepository userRepository,
@@ -33,7 +34,8 @@ public sealed class AuthController : ControllerBase
         IJiraAuthService jiraAuthService,
         IJwtService jwtService,
         IMapper mapper,
-        IRsaCryptoService rsaCryptoService)
+        IRsaCryptoService rsaCryptoService,
+        IActivityLogService activityLogService)
     {
         _userRepository = userRepository;
         _userService = userService;
@@ -45,6 +47,7 @@ public sealed class AuthController : ControllerBase
         _jwtService = jwtService;
         _mapper = mapper;
         _rsaCryptoService = rsaCryptoService;
+        _activityLogService = activityLogService;
     }
 
     [HttpGet("login-public-key")]
@@ -192,6 +195,18 @@ public sealed class AuthController : ControllerBase
             if (user == null)
             {
                 Console.WriteLine($"LOGIN FAILED: User not found");
+                
+                // Başarısız login logu
+                await _activityLogService.LogActivityAsync(
+                    userId: 0, // Kullanıcı bulunamadığı için 0
+                    activityType: "login_failed",
+                    description: $"Başarısız giriş denemesi: {userEmail}",
+                    ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    userAgent: Request.Headers["User-Agent"].ToString(),
+                    isSuccessful: false,
+                    errorMessage: "Kullanıcı bulunamadı"
+                );
+                
                 return Unauthorized(new AuthResponse
                 {
                     Success = false,
@@ -205,6 +220,18 @@ public sealed class AuthController : ControllerBase
             if (!passwordVerified)
             {
                 Console.WriteLine($"LOGIN FAILED: Password verification failed");
+                
+                // Başarısız login logu
+                await _activityLogService.LogActivityAsync(
+                    userId: user.Id,
+                    activityType: "login_failed",
+                    description: $"Başarısız giriş denemesi: {userEmail}",
+                    ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    userAgent: Request.Headers["User-Agent"].ToString(),
+                    isSuccessful: false,
+                    errorMessage: "Şifre yanlış"
+                );
+                
                 return Unauthorized(new AuthResponse
                 {
                     Success = false,
@@ -225,6 +252,16 @@ public sealed class AuthController : ControllerBase
             
             // JWT token oluştur
             var token = _jwtService.GenerateToken(user);
+            
+            // Başarılı login logu
+            await _activityLogService.LogActivityAsync(
+                userId: user.Id,
+                activityType: "login_success",
+                description: $"Başarılı giriş: {userEmail}",
+                ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                userAgent: Request.Headers["User-Agent"].ToString(),
+                isSuccessful: true
+            );
             
             return Ok(new AuthResponse
             {
