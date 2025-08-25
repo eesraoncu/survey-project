@@ -3,11 +3,13 @@ using SurveyApp.Application.DTO.Response;
 using SurveyApp.Services;
 using AutoMapper;
 using SurveyApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SurveyApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "admin")]
 public sealed class ActivityLogController : ControllerBase
 {
     private readonly IActivityLogService _activityLogService;

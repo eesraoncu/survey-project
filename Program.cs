@@ -16,6 +16,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
+// Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
+});
+
 // Form options konfigürasyonu (dosya yükleme için)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
@@ -136,6 +142,8 @@ builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+// Admin role senkron servisi
+builder.Services.AddScoped<AdminRoleSyncService>();
 builder.Services.AddScoped<MigrationService>();
 builder.Services.AddSingleton<IRsaCryptoService, RsaCryptoService>();
 
@@ -174,21 +182,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Migration'ı çalıştır (sadece bir kez) - şimdilik kapalı
-// if (app.Environment.IsDevelopment())
-// {
-//     try
-//     {
-//         using (var scope = app.Services.CreateScope())
-//         {
-//             var migrationService = scope.ServiceProvider.GetRequiredService<MigrationService>();
-//             await migrationService.MigrateUsersToNewRoleSystem();
-//         }
-//     }
-//     catch (Exception ex)
-//     {
-//         Console.WriteLine($"Migration hatası: {ex.Message}");
-//     }
-// }
+// Development'ta admin rol senkronu (opsiyonel)
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var sync = scope.ServiceProvider.GetRequiredService<AdminRoleSyncService>();
+        await sync.SyncAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Admin role sync hatası: {ex.Message}");
+    }
+}
 
 app.Run(); 

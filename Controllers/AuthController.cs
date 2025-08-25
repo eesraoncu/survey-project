@@ -5,6 +5,7 @@ using SurveyApp.Infrastructure.Repositories;
 using SurveyApp.Models;
 using SurveyApp.Services;
 using AutoMapper;
+using MongoDB.Driver;
 
 namespace SurveyApp.Controllers;
 
@@ -22,6 +23,7 @@ public sealed class AuthController : ControllerBase
     private readonly IJwtService _jwtService;
     private readonly IMapper _mapper;
     private readonly IRsaCryptoService _rsaCryptoService;
+    private readonly IMongoDatabase _db;
     private readonly IActivityLogService _activityLogService;
 
     public AuthController(
@@ -35,6 +37,7 @@ public sealed class AuthController : ControllerBase
         IJwtService jwtService,
         IMapper mapper,
         IRsaCryptoService rsaCryptoService,
+        IMongoDatabase db,
         IActivityLogService activityLogService)
     {
         _userRepository = userRepository;
@@ -47,6 +50,7 @@ public sealed class AuthController : ControllerBase
         _jwtService = jwtService;
         _mapper = mapper;
         _rsaCryptoService = rsaCryptoService;
+        _db = db;
         _activityLogService = activityLogService;
     }
 
@@ -191,22 +195,46 @@ public sealed class AuthController : ControllerBase
                 Console.WriteLine($"Stored password hash length: {user.UserPassword?.Length ?? 0}");
             }
             
-            // Kullanıcı bulunamadıysa veya şifre yanlışsa
+            // Eğer Users tarafında kullanıcı yoksa ya da şifre doğrulaması başarısızsa admin koleksiyonunu dene
+            async Task<ActionResult<AuthResponse>> TryAdminLoginFallback()
+            {
+                var adminCol = _db.GetCollection<Admin>("admin");
+                var admin = await adminCol.Find(a => a.AdminEmail == userEmail && a.IsActive).FirstOrDefaultAsync();
+                if (admin is null) return null;
+
+                var adminPasswordOk = _passwordService.VerifyPassword(providedPassword, admin.AdminPassword);
+                if (!adminPasswordOk) return null;
+
+                // Geçici User nesnesi oluştur (token ve mapping için)
+                var adminUser = new User
+                {
+                    Id = 0,
+                    UserEmail = admin.AdminEmail,
+                    UserName = admin.AdminName,
+                    UserSurname = admin.AdminSurname,
+                    IsActive = true,
+                    Roles = new List<Role> { new Role { RoleName = "admin", IsActive = true } }
+                };
+
+                var response = _mapper.Map<UserResponse>(adminUser);
+                var token = _jwtService.GenerateToken(adminUser);
+
+                return Ok(new AuthResponse
+                {
+                    Success = true,
+                    Message = "Giriş başarılı!",
+                    User = response,
+                    Token = token
+                });
+            }
+            
             if (user == null)
             {
                 Console.WriteLine($"LOGIN FAILED: User not found");
-                
-                // Başarısız login logu
-                await _activityLogService.LogActivityAsync(
-                    userId: 0, // Kullanıcı bulunamadığı için 0
-                    activityType: "login_failed",
-                    description: $"Başarısız giriş denemesi: {userEmail}",
-                    ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    userAgent: Request.Headers["User-Agent"].ToString(),
-                    isSuccessful: false,
-                    errorMessage: "Kullanıcı bulunamadı"
-                );
-                
+
+                var adminFallback = await TryAdminLoginFallback();
+                if (adminFallback != null) return adminFallback;
+
                 return Unauthorized(new AuthResponse
                 {
                     Success = false,
@@ -220,17 +248,9 @@ public sealed class AuthController : ControllerBase
             if (!passwordVerified)
             {
                 Console.WriteLine($"LOGIN FAILED: Password verification failed");
-                
-                // Başarısız login logu
-                await _activityLogService.LogActivityAsync(
-                    userId: user.Id,
-                    activityType: "login_failed",
-                    description: $"Başarısız giriş denemesi: {userEmail}",
-                    ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    userAgent: Request.Headers["User-Agent"].ToString(),
-                    isSuccessful: false,
-                    errorMessage: "Şifre yanlış"
-                );
+
+                var adminFallback = await TryAdminLoginFallback();
+                if (adminFallback != null) return adminFallback;
                 
                 return Unauthorized(new AuthResponse
                 {
@@ -248,27 +268,17 @@ public sealed class AuthController : ControllerBase
                 });
             }
 
-            var response = _mapper.Map<UserResponse>(user);
+            var userResponse = _mapper.Map<UserResponse>(user);
             
             // JWT token oluştur
-            var token = _jwtService.GenerateToken(user);
-            
-            // Başarılı login logu
-            await _activityLogService.LogActivityAsync(
-                userId: user.Id,
-                activityType: "login_success",
-                description: $"Başarılı giriş: {userEmail}",
-                ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
-                userAgent: Request.Headers["User-Agent"].ToString(),
-                isSuccessful: true
-            );
+            var tokenOk = _jwtService.GenerateToken(user);
             
             return Ok(new AuthResponse
             {
                 Success = true,
                 Message = "Giriş başarılı!",
-                User = response,
-                Token = token
+                User = userResponse,
+                Token = tokenOk
             });
         }
         catch (Exception ex)
@@ -637,6 +647,74 @@ public sealed class AuthController : ControllerBase
                 Message = "Jira ile giriş işlemi başarısız!",
                 Error = ex.Message
             });
+        }
+    }
+
+    [HttpPost("admin-login")]
+    public async Task<ActionResult<AdminAuthResponse>> AdminLogin([FromForm] string adminEmail, [FromForm] string adminPassword)
+    {
+        try
+        {
+            var adminCol = _db.GetCollection<Admin>("admin");
+            // is_active alanı dokümanda yoksa filtre kaçırır; bu yüzden sadece email ile getirip sonradan kontrol et
+            var admin = await adminCol.Find(a => a.AdminEmail == adminEmail).FirstOrDefaultAsync();
+            if (admin is null)
+            {
+                return Unauthorized(new AdminAuthResponse { Success = false, Message = "Email veya şifre hatalı!" });
+            }
+
+            if (!admin.IsActive)
+            {
+                return Unauthorized(new AdminAuthResponse { Success = false, Message = "Hesap aktif değil!" });
+            }
+
+            // Önce hash kontrolü yap, başarısız olursa düz metin karşılaştırması yap
+            bool ok = _passwordService.VerifyPassword(adminPassword, admin.AdminPassword);
+            if (!ok)
+            {
+                // Hash doğrulaması başarısız olduysa, düz metin karşılaştırması yap
+                ok = adminPassword == admin.AdminPassword;
+            }
+            
+            if (!ok)
+            {
+                return Unauthorized(new AdminAuthResponse { Success = false, Message = "Email veya şifre hatalı!" });
+            }
+
+            // JWT için geçici user; response için admin DTO
+            var adminUserForJwt = new User
+            {
+                Id = 0,
+                UserEmail = admin.AdminEmail,
+                UserName = admin.AdminName,
+                UserSurname = admin.AdminSurname,
+                IsActive = true,
+                Roles = new List<Role> { new Role { RoleName = "admin", IsActive = true } }
+            };
+
+            var token = _jwtService.GenerateToken(adminUserForJwt);
+
+            var adminResponse = new AdminResponse
+            {
+                Id = admin.Id,
+                AdminEmail = admin.AdminEmail,
+                AdminName = admin.AdminName,
+                AdminSurname = admin.AdminSurname,
+                IsActive = admin.IsActive,
+                Roles = new List<string> { "admin" }
+            };
+
+            return Ok(new AdminAuthResponse
+            {
+                Success = true,
+                Message = "Admin girişi başarılı!",
+                Admin = adminResponse,
+                Token = token
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new AdminAuthResponse { Success = false, Message = "Giriş işlemi başarısız!", Error = ex.Message });
         }
     }
 }
